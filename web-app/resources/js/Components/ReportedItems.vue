@@ -1,14 +1,30 @@
 <template>
   <v-container class="pa-6">
-    <v-card class="mx-auto" max-width="1500">
+    <v-card class="mx-auto" max-width="100%">
       <v-card-title class="headline d-flex align-center">
         <v-spacer></v-spacer>
         <span>Reported Items</span>
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details class="mx-4"
-        style="max-width: 300px;"></v-text-field>
+
+      <!-- Search Bar with Responsiveness -->
+      <v-row>
+        <v-col cols="12" sm="6" md="4" class="mx-auto">
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+            class="w-100"
+            style="max-width: 300px;"
+          />
+        </v-col>
+      </v-row>
+
       <v-divider></v-divider>
+
+      <!-- Data Table with Pagination -->
       <v-data-table
         :headers="headers"
         :items="formattedItems"
@@ -53,22 +69,37 @@
           </div>
         </template>
 
-
         <template v-slot:progress>
           <v-progress-linear color="#4fb9af" height="2" indeterminate></v-progress-linear>
         </template>
+
+        <!-- Pagination Section -->
         <template v-slot:bottom="props">
-          <div class="d-flex align-center justify-center pa-4 gap-4">
-            <v-btn style="background-color: #4fb9af; color: white; text-align: center" variant="flat"
-              :disabled="page === 1" @click="page--">
-              Previous
-            </v-btn>
-            <span>Page {{ page }} of {{ Math.ceil(formattedItems.length / 10) }}</span>
-            <v-btn style="background-color: #4fb9af; color: white; text-align: center" variant="flat"
-              :disabled="page >= Math.ceil(formattedItems.length / 10)" @click="page++">
-              Next
-            </v-btn>
-          </div>
+          <v-row class="d-flex justify-center pb-3">
+            <v-col cols="auto">
+              <v-btn
+                style="background-color: #4fb9af; color: white;"
+                variant="flat"
+                :disabled="page === 1"
+                @click="page--"
+              >
+                Previous
+              </v-btn>
+            </v-col>
+            <v-col cols="auto">
+              <span>Page {{ page }} of {{ Math.ceil(formattedItems.length / 10) }}</span>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn
+                style="background-color: #4fb9af; color: white;"
+                variant="flat"
+                :disabled="page >= Math.ceil(formattedItems.length / 10)"
+                @click="page++"
+              >
+                Next
+              </v-btn>
+            </v-col>
+          </v-row>
         </template>
       </v-data-table>
     </v-card>
