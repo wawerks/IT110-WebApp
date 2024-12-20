@@ -2,6 +2,41 @@
   <div class="map-container">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <v-card-title class="text-h6 font-weight-bold mt-5">LostNoMore Map</v-card-title>
+    
+    <!-- Add search bar -->
+    <div class="search-container">
+      <div class="search-wrapper">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search..."
+          @keyup.enter="searchLocation"
+          class="search-input"
+        />
+        <button
+          class="search-button"
+          @click="searchLocation"
+        >
+          <i class="fas fa-search" style="color: white; font-size: 18px;"></i>
+        </button>
+      </div>
+      <!-- Search results dropdown -->
+      <div v-if="searchResults.length > 0" class="search-results">
+        <v-list>
+          <v-list-item
+            v-for="(result, index) in searchResults"
+            :key="index"
+            @click="selectLocation(result)"
+            class="search-result-item"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{ result.display_name }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </div>
+    </div>
+
     <div class="map-wrapper" :class="{ 'map-disabled': disabled }" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
       <div id="map" ref="mapRef" class="custom-map"></div>
       <div v-if="isLoading" class="loading-overlay">
@@ -40,6 +75,9 @@ export default {
     return {
       map: null,
       isLoading: true,
+      searchQuery: '',
+      searchResults: [],
+      searchMarker: null,
       snackbar: {
         visible: false,
         message: "",
@@ -129,16 +167,6 @@ export default {
           bounds: bounds,
           tileSize: 512,
           zoomOffset: -1
-        }).addTo(this.map);
-
-        // Add a rectangle to highlight Caraga region
-        const caragaRectangle = L.rectangle(bounds, {
-          color: "#FF5722",
-          weight: 2,
-          fill: true,
-          fillColor: '#000',
-          fillOpacity: 0.1,
-          dashArray: '5, 10'
         }).addTo(this.map);
 
         // Create overlay rectangles to dim areas outside Caraga
@@ -306,9 +334,7 @@ export default {
               this.initialLocationSet = true;
               this.showSnackbar("Location found!", "success");
             }
-          } else {
-            this.showSnackbar("You are outside the Caraga region.", "warning");
-          }
+          } 
         },
         (error) => {
           let message = "Unable to retrieve your location.";
@@ -319,9 +345,9 @@ export default {
             case error.POSITION_UNAVAILABLE:
               message = "Location information is unavailable.";
               break;
-            case error.TIMEOUT:
-              message = "Location request timed out.";
-              break;
+            // case error.TIMEOUT:
+            //   message = "Location request timed out.";
+            //   break;
           }
           this.showSnackbar(message, "error");
         },
@@ -383,6 +409,53 @@ export default {
         // Center the map on the location
         this.map.setView([location.lat, location.lng], 15);
       }
+    },
+    async searchLocation() {
+      if (!this.searchQuery) return;
+      
+      try {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+          params: {
+            q: this.searchQuery,
+            format: 'json',
+            limit: 5
+          }
+        });
+        
+        this.searchResults = response.data;
+        
+        if (this.searchResults.length === 0) {
+          this.showSnackbar('No locations found', 'info');
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        this.showSnackbar('Error searching for location', 'error');
+      }
+    },
+
+    selectLocation(location) {
+      const lat = parseFloat(location.lat);
+      const lng = parseFloat(location.lon);
+      
+      // Clear previous search marker if it exists
+      if (this.searchMarker) {
+        this.map.removeLayer(this.searchMarker);
+      }
+      
+      // Create new marker
+      this.searchMarker = L.marker([lat, lng]).addTo(this.map);
+      
+      // Center map on selected location
+      this.map.setView([lat, lng], 15);
+      
+      // Clear search results
+      this.searchResults = [];
+      
+      // Update selected location
+      this.selectedLatLng = { lat, lng };
+      
+      // Emit the location if needed
+      this.$emit('location-selected', { lat, lng });
     },
   },
   beforeDestroy() {
@@ -597,89 +670,96 @@ export default {
   margin-bottom: 4px;
 }
 
-/* Search marker styles */
-.search-location-marker {
+.search-container {
   position: relative;
+  z-index: 1000;
+  width: 100%;
+  max-width: 400px;
+  margin: 16px auto;
+  padding: 0 20px;
 }
 
-.search-marker-pin {
-  width: 20px;
-  height: 20px;
-  background-color: #FF5722;
-  border: 2px solid white;
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(0,0,0,0.3);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
 }
 
-.search-marker-pulse {
-  width: 40px;
-  height: 40px;
-  background-color: rgba(255, 87, 34, 0.3);
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: search-pulse 2s infinite;
-}
-
-@keyframes search-pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
-  }
-}
-
-/* Search popup styles */
-.search-popup {
-  padding: 8px;
-  max-width: 250px;
-}
-
-.search-popup h3 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
-}
-
-.search-popup p {
-  margin: 0;
-  font-size: 12px;
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 16px;
+  font-size: 16px;
   color: #666;
-  line-height: 1.4;
+  background: transparent;
+  width: 100%;
+  -webkit-appearance: none;
 }
 
-/* Loading indicator for search */
-.v-text-field.input-field.loading .v-input__slot::after {
-  content: '';
+.search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-button {
+  background: #40E0D0;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  min-width: 50px;
+  margin: 0;
+  outline: none;
+}
+
+.search-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-button:hover {
+  background: #3CD0C0;
+}
+
+.search-button i {
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+}
+
+.search-results {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid #ccc;
-  border-top-color: #1976D2;
-  border-radius: 50%;
-  animation: search-spin 0.8s linear infinite;
+  top: calc(100% + 8px);
+  left: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-@keyframes search-spin {
-  to {
-    transform: translateY(-50%) rotate(360deg);
-  }
+.search-result-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-/* Custom marker styles */
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
 .custom-marker {
   position: relative;
 }
@@ -691,7 +771,7 @@ export default {
   border: 3px solid white;
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
-  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: transform 0.2s;
 }

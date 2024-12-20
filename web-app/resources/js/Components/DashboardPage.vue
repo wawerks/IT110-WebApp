@@ -7,9 +7,9 @@
           <div class="search-bar">
             <input type="text" v-model="searchQuery" placeholder="Search for lost items..." @input="filterPosts" />
             <div v-if="isLoading" class="loading-spinner flex items-center">
-            <div class="animate-spin rounded-full ms-5 border-t-4 border-blue-500 w-8 h-8"></div>
-            <p class="ms-3">Loading...</p>
-          </div>
+              <div class="animate-spin rounded-full ms-5 border-t-4 border-blue-500 w-8 h-8"></div>
+              <p class="ms-3">Loading...</p>
+            </div>
           </div>
         </section>
 
@@ -44,72 +44,72 @@
             <!-- Edit Button -->
             <button @click="openEditModal" class="post-modal__edit-btn">Edit</button>
 
-          n>
+            n>
           </div>
         </div>
 
-       <!-- Edit Modal -->
-       <div v-if="showEditModal" class="edit-modal__overlay" @click="closeEditModal">
-  <div class="edit-modal__content" @click.stop>
-    <button type="button" @click="closeEditModal" class="edit-modal__close-btn">&times;</button>
-    <h2 class="edit-modal__title">Edit Item</h2>
+        <!-- Edit Modal -->
+        <div v-if="showEditModal" class="edit-modal__overlay" @click="closeEditModal">
+          <div class="edit-modal__content" @click.stop>
+            <button type="button" @click="closeEditModal" class="edit-modal__close-btn">&times;</button>
+            <h2 class="edit-modal__title">Edit Item</h2>
 
-    <form @submit.prevent="submitEditForm">
-      <div class="form-group">
-        <label for="editItemName">Item Name</label>
-        <input type="text" id="editItemName" v-model="currentPost.item_name" required />
-      </div>
+            <form @submit.prevent="submitEditForm">
+              <div class="form-group">
+                <label for="editItemName">Item Name</label>
+                <input type="text" id="editItemName" v-model="currentPost.item_name" required />
+              </div>
 
-      <!-- Category Dropdown -->
-      <div class="form-group">
-        <label for="editCategory">Category</label>
-        <select id="editCategory" v-model="currentPost.category" required>
-          <option value="Electronics">Electronics</option>
-          <option value="Clothing">Clothing</option>
-          <option value="Wallets">Wallets</option>
-          <option value="Bags">Bags</option>
-          <option value="Jewelry">Jewelry</option>
-          <option value="Cards">Cards</option>
-          <option value="Books">Books</option>
-          <option value="Accessories">Accessories</option>
-        </select>
-      </div>
+              <!-- Category Dropdown -->
+              <div class="form-group">
+                <label for="editCategory">Category</label>
+                <select id="editCategory" v-model="currentPost.category" required>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Clothing">Clothing</option>
+                  <option value="Wallets">Wallets</option>
+                  <option value="Bags">Bags</option>
+                  <option value="Jewelry">Jewelry</option>
+                  <option value="Cards">Cards</option>
+                  <option value="Books">Books</option>
+                  <option value="Accessories">Accessories</option>
+                </select>
+              </div>
 
-      <div class="form-group">
-        <label for="editDescription">Description</label>
-        <textarea id="editDescription" v-model="currentPost.description" required></textarea>
-      </div>
+              <div class="form-group">
+                <label for="editDescription">Description</label>
+                <textarea id="editDescription" v-model="currentPost.description" required></textarea>
+              </div>
 
-      <div class="form-group">
-        <label for="editFacebook">Facebook</label>
-        <input type="text" id="editFacebook" v-model="currentPost.facebook_link" required />
-      </div>
+              <div class="form-group">
+                <label for="editFacebook">Facebook</label>
+                <input type="text" id="editFacebook" v-model="currentPost.facebook_link" required />
+              </div>
 
-      <div class="form-group">
-        <label for="editContact">Contact</label>
-        <input type="text" id="editContact" v-model="currentPost.contact_number" required />
-      </div>
+              <div class="form-group">
+                <label for="editContact">Contact</label>
+                <input type="text" id="editContact" v-model="currentPost.contact_number" required />
+              </div>
 
-      <!-- Image Upload Section -->
-      <div class="form-group">
-        <label for="editImage">Upload New Image</label>
-        <input type="file" id="editImage" @change="handleImageUpload" accept="image/*" />
-      </div>
+              <!-- Image Upload Section -->
+              <div class="form-group">
+                <label for="editImage">Upload New Image</label>
+                <input type="file" id="editImage" @change="handleImageUpload" accept="image/*" />
+              </div>
 
-      <!-- Image Preview Section (optional) -->
-      <div v-if="imagePreviewUrl" class="form-group">
-        <label>Preview Image</label>
-        <img :src="imagePreviewUrl" alt="Image Preview" class="image-preview" />
-      </div>
+              <!-- Image Preview Section (optional) -->
+              <div v-if="imagePreviewUrl" class="form-group">
+                <label>Preview Image</label>
+                <img :src="imagePreviewUrl" alt="Image Preview" class="image-preview" />
+              </div>
 
-     <!-- Submit and Delete Buttons -->
-        <div class="edit-modal__buttons">
-          <button type="submit" class="edit-modal__submit-btn">Save Changes</button>
-          <button type="button" class="edit-modal__delete-btn" @click="deleteCurrentItem">Delete Item</button>
+              <!-- Submit and Delete Buttons -->
+              <div class="edit-modal__buttons">
+                <button type="submit" class="edit-modal__submit-btn">Save Changes</button>
+                <button type="button" class="edit-modal__delete-btn" @click="deleteCurrentItem">Delete Item</button>
+              </div>
+            </form>
+          </div>
         </div>
-    </form>
-  </div>
-</div>
 
 
 
@@ -192,7 +192,7 @@
                             <i class="fas fa-map-marker-alt"></i> Add Location (Click to Enable Map)
                           </button>
                         </div>
-                        <div v-if="locationSelected" class="location-status" style="margin-bottom: 320px">
+                        <div v-if="locationSelected" class="location-status" style="margin-bottom: 420px">
                           <span v-if="newItem.location">Location selected ✓</span>
                           <span v-else>Click on the map to place a pin</span>
                         </div>
@@ -319,16 +319,16 @@ export default {
       }
     },
     filterPosts() {
-  const query = this.searchQuery.toLowerCase();
-  this.filteredPosts = query
-    ? this.posts.filter(
-        (post) =>
-          post.category.toLowerCase().includes(query) ||
-          post.item_name.toLowerCase().includes(query) ||
-          post.description.toLowerCase().includes(query)
-      )
-    : [...this.posts];
-},
+      const query = this.searchQuery.toLowerCase();
+      this.filteredPosts = query
+        ? this.posts.filter(
+          (post) =>
+            post.category.toLowerCase().includes(query) ||
+            post.item_name.toLowerCase().includes(query) ||
+            post.description.toLowerCase().includes(query)
+        )
+        : [...this.posts];
+    },
 
     handleFileUpload(event) {
       const file = event.target.files[0];
@@ -361,117 +361,117 @@ export default {
       this.newItem.location = location;
       this.locationSelected = true;
     },
-  async submitForm() {
-  console.log("Form submission started");
+    async submitForm() {
+      console.log("Form submission started");
 
-  // Check if a location is selected
-  if (!this.newItem.location) {
-    this.showError("Please select a location on the map first");
-    console.log("Location not selected");
-    return;
-  }
-
-  this.isSubmitting = true;
-  console.log("Submitting form data...");
-
-  try {
-    // Create a FormData object to handle form data
-    const formData = new FormData();
-    console.log("FormData object created");
-
-    // Append image file if exists
-    if (this.newItem.image_file) {
-      formData.append("image_url", this.newItem.image_file);
-      console.log("Image file added to FormData");
-    }
-
-    // Prepare other form fields
-    const formFields = {
-      item_name: this.newItem.item_name,
-      status: this.newItem.status,
-      category: this.newItem.category,
-      description: this.newItem.description,
-      facebook_link: this.newItem.facebook_link,
-      contact_number: this.newItem.contact_number,
-      user_id: this.newItem.user_id,
-      latitude: this.newItem.location.lat,
-      longitude: this.newItem.location.lng,
-    };
-    console.log("Form fields prepared:", formFields);
-
-    // Add location as a string
-    formFields.location = `${this.newItem.location.lat},${this.newItem.location.lng}`;
-    console.log("Location added:", formFields.location);
-
-    // Add the correct date based on the status
-    if (this.newItem.status === "Lost") {
-      this.isFound == false;
-      formFields.lost_date = this.newItem.lost_date;
-      console.log("Lost date added:", formFields.lost_date);
-    } else {
-      this.isFound == true
-      formFields.found_date = this.newItem.found_date;
-      console.log("Found date added:", formFields.found_date);
-    }
-
-    // Append all form fields to the FormData
-    Object.keys(formFields).forEach((key) => {
-      if (formFields[key] !== null && formFields[key] !== undefined) {
-        formData.append(key, formFields[key]);
-        console.log(`Form field added: ${key} = ${formFields[key]}`);
+      // Check if a location is selected
+      if (!this.newItem.location) {
+        this.showError("Please select a location on the map first");
+        console.log("Location not selected");
+        return;
       }
-    });
 
-    // Get CSRF token for the request
-    const token = document.head.querySelector('meta[name="csrf-token"]');
-    if (!token) {
-      this.showError("CSRF token not found. Please refresh the page.");
-      console.log("CSRF token not found");
-      return;
-    }
+      this.isSubmitting = true;
+      console.log("Submitting form data...");
 
-    formData.append("_token", token.content);
-    console.log("CSRF token added:", token.content);
+      try {
+        // Create a FormData object to handle form data
+        const formData = new FormData();
+        console.log("FormData object created");
 
-    // Determine the correct URL based on item status
-    const url = this.newItem.status === "Lost" ? window.lostItemsStore : window.foundItemsStore;
-    console.log("Post URL determined:", url);
+        // Append image file if exists
+        if (this.newItem.image_file) {
+          formData.append("image_url", this.newItem.image_file);
+          console.log("Image file added to FormData");
+        }
 
-    // Make the API request
-    console.log("Sending POST request...");
-    const response = await axios.post(url, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        "X-CSRF-TOKEN": token.content,
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      withCredentials: true,
-    });
+        // Prepare other form fields
+        const formFields = {
+          item_name: this.newItem.item_name,
+          status: this.newItem.status,
+          category: this.newItem.category,
+          description: this.newItem.description,
+          facebook_link: this.newItem.facebook_link,
+          contact_number: this.newItem.contact_number,
+          user_id: this.newItem.user_id,
+          latitude: this.newItem.location.lat,
+          longitude: this.newItem.location.lng,
+        };
+        console.log("Form fields prepared:", formFields);
 
-    console.log("Form submitted successfully:", response);
-    // Show success message and refresh the posts
-    // this.showSuccess("Post created successfully!");
-    location.reload(true);
-    this.closeAllModals();
-    await this.fetchPosts();
-  } catch (error) {
-    console.error("Error occurred during form submission:", error);
+        // Add location as a string
+        formFields.location = `${this.newItem.location.lat},${this.newItem.location.lng}`;
+        console.log("Location added:", formFields.location);
 
-    if (error.response && error.response.status === 422) {
-      const validationErrors = error.response.data.errors;
-      const errorMessages = Object.values(validationErrors)
-        .flat()
-        .join("\n");
-      this.showError("Validation failed:\n" + errorMessages);
-      console.log("Validation errors:", errorMessages);
-    } else {
-      this.showError("Error creating post: " + error.message);
-    }
-  } finally {
-    this.isSubmitting = false;
-    console.log("Form submission completed");
-  }
-},
+        // Add the correct date based on the status
+        if (this.newItem.status === "Lost") {
+          this.isFound == false;
+          formFields.lost_date = this.newItem.lost_date;
+          console.log("Lost date added:", formFields.lost_date);
+        } else {
+          this.isFound == true
+          formFields.found_date = this.newItem.found_date;
+          console.log("Found date added:", formFields.found_date);
+        }
+
+        // Append all form fields to the FormData
+        Object.keys(formFields).forEach((key) => {
+          if (formFields[key] !== null && formFields[key] !== undefined) {
+            formData.append(key, formFields[key]);
+            console.log(`Form field added: ${key} = ${formFields[key]}`);
+          }
+        });
+
+        // Get CSRF token for the request
+        const token = document.head.querySelector('meta[name="csrf-token"]');
+        if (!token) {
+          this.showError("CSRF token not found. Please refresh the page.");
+          console.log("CSRF token not found");
+          return;
+        }
+
+        formData.append("_token", token.content);
+        console.log("CSRF token added:", token.content);
+
+        // Determine the correct URL based on item status
+        const url = this.newItem.status === "Lost" ? window.lostItemsStore : window.foundItemsStore;
+        console.log("Post URL determined:", url);
+
+        // Make the API request
+        console.log("Sending POST request...");
+        const response = await axios.post(url, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "X-CSRF-TOKEN": token.content,
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          withCredentials: true,
+        });
+
+        console.log("Form submitted successfully:", response);
+        // Show success message and refresh the posts
+        // this.showSuccess("Post created successfully!");
+        location.reload(true);
+        this.closeAllModals();
+        await this.fetchPosts();
+      } catch (error) {
+        console.error("Error occurred during form submission:", error);
+
+        if (error.response && error.response.status === 422) {
+          const validationErrors = error.response.data.errors;
+          const errorMessages = Object.values(validationErrors)
+            .flat()
+            .join("\n");
+          this.showError("Validation failed:\n" + errorMessages);
+          console.log("Validation errors:", errorMessages);
+        } else {
+          this.showError("Error creating post: " + error.message);
+        }
+      } finally {
+        this.isSubmitting = false;
+        console.log("Form submission completed");
+      }
+    },
     showError(message) {
       const errorLines = message.split("\n");
       const formattedMessage = errorLines.join("\n• ");
@@ -633,7 +633,7 @@ export default {
     showSuccess(message) {
       alert(message); // Simple alert for now, or use a custom notification system
     }
-  } 
+  }
 };
 </script>
 
@@ -767,20 +767,24 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1001; /* Ensure the Edit Modal is above other elements */
+  z-index: 1001;
+  /* Ensure the Edit Modal is above other elements */
   animation: fadeIn 0.4s ease-in-out;
 }
 
 .edit-modal__content {
   position: relative;
-  max-width: 800px; /* or any width you prefer */
+  max-width: 800px;
+  /* or any width you prefer */
   margin: 0 auto;
   padding: 20px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;  /* Enables vertical scrolling */
-  max-height: 100vh;  /* Limit the height to 80% of the viewport height */
+  overflow-y: auto;
+  /* Enables vertical scrolling */
+  max-height: 100vh;
+  /* Limit the height to 80% of the viewport height */
 }
 
 .edit-modal__title {
@@ -877,9 +881,12 @@ export default {
 /* ======== Close Button ======== */
 .post-modal__close-btn {
   position: absolute;
-  top: 15px; /* Keeps it close to the top */
-  right: 15px; /* Keeps it close to the right edge */
-  background: #ff6f61; /* A softer shade of red */
+  top: 15px;
+  /* Keeps it close to the top */
+  right: 15px;
+  /* Keeps it close to the right edge */
+  background: #ff6f61;
+  /* A softer shade of red */
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -1015,7 +1022,7 @@ export default {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
-  color:#008080;
+  color: #008080;
 }
 
 /* === Hover Effect - Card Elevation === */
