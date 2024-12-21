@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\LostItem;
 use App\Models\FoundItem;
 use App\Models\Comment;
+use App\Models\Claim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -45,6 +46,14 @@ class NotificationController extends Controller
         
                     // If user exists, retrieve name
                     $userName = $commentUser && $commentUser->user ? $commentUser->user->name : 'Unknown User';
+                }
+
+                if (isset($data['claim_id'])) {
+                    // Find the claim by ID
+                    $claim = Claim::find($data['claim_id']);
+                
+                    // If the claim exists, retrieve the name of the user who created it
+                    $userName = $claim && $claim->user ? $claim->user->name : 'Unknown User';
                 }
     
                 // Format the date using Carbon

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Claim;
 use App\Models\FoundItem;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -18,39 +19,72 @@ class ClaimController extends Controller
      */
     public function store(Request $request)
     {
-        // Get the authenticated user's ID directly
-        $userID = Auth::id(); // Always use the Authenticated user's ID
+        try {
+            if (!auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
     
-        // If no submission date is provided, set it to the current date
-        $submissionDate = $request->submission_date ? Carbon::parse($request->submission_date)->toDateString() : Carbon::now()->toDateString();
+            // Validate the request
+            $validated = $request->validate([
+                'item_id' => 'required|exists:found_items,id',
+                'claim_status' => 'required|in:Pending,Approved,Rejected',
+                'submission_date' => 'nullable|date',
+                'proof_of_ownership' => 'nullable|file|mimes:jpeg,png,pdf|max:2048', // File validation
+            ]);
     
-        // Validate the request
-        $validated = $request->validate([
-            'item_id' => 'required|exists:found_items,id',
-            'claim_status' => 'required|in:Pending,Approved,Rejected',
-            'submission_date' => 'nullable|date', // Make submission_date nullable
-            'proof_of_ownership' => 'nullable|file|mimes:jpeg,png,pdf|max:2048', // File validation
-        ]);
+            // If no submission date is provided, set it to the current date
+            $submissionDate = $request->submission_date ? Carbon::parse($request->submission_date)->toDateString() : Carbon::now()->toDateString();
     
-        // Handle file upload
-        $imageUrl = null;
-        if ($request->hasFile('proof_of_ownership')) {
-            $filename = time() . '.' . $request->proof_of_ownership->extension();
-            $imageUrl = $request->file('proof_of_ownership')->storeAs('assets/proof', $filename, 'public');
+            // Handle file upload
+            $imageUrl = null;
+            if ($request->hasFile('proof_of_ownership')) {
+                $filename = time() . '.' . $request->proof_of_ownership->extension();
+                $imageUrl = $request->file('proof_of_ownership')->storeAs('assets/proof', $filename, 'public');
+            }
+    
+            // Create the claim with the authenticated user's ID
+            $claim = Claim::create([
+                'item_id' => $validated['item_id'],
+                'user_id' => auth()->id(), // Use the authenticated user's ID
+                'claim_status' => $validated['claim_status'],
+                'submission_date' => $submissionDate, // Use the provided date or current date
+                'proof_of_ownership' => $imageUrl,
+            ]);
+    
+            // Find the item (assuming it's from the 'found_items' table)
+            $item = FoundItem::findOrFail($validated['item_id']);
+    
+            // Create notification for the item owner if it's not their own claim
+            if ($item->user_id !== auth()->id()) {
+                $notificationData = [
+                    'title' => 'New Claim',
+                    'message' => auth()->user()->name . ' has claimed your found item "' . $item->item_name . '"',
+                    'item_id' => $item->id,
+                    'item_type' => 'found',
+                    'claim_id' => $claim->claim_id,
+                    'item_name' => $item->item_name,
+                    'claimer_name' => auth()->user()->name
+                ];
+    
+                Notification::create([
+                    'user_id' => $item->user_id, // Notify the item owner
+                    'type' => 'claim',
+                    'data' => $notificationData,
+                    'read_at' => null
+                ]);
+            }
+    
+            // Return a response
+            return redirect('/newsfeed'); 
+        } catch (\Exception $e) {
+            \Log::error('Error creating claim: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to create claim',
+                'message' => $e->getMessage()
+            ], 500);
         }
-    
-        // Create the claim with the authenticated user's ID
-        $claim = Claim::create([
-            'item_id' => $validated['item_id'],
-            'user_id' => $userID, // Use the authenticated user's ID
-            'claim_status' => $validated['claim_status'],
-            'submission_date' => $submissionDate, // Use the provided date or current date
-            'proof_of_ownership' => $imageUrl,
-        ]);
-    
-        // Instead of returning an Inertia response, return a redirect
-        return redirect('/newsfeed'); 
     }
+    
     
     
 
