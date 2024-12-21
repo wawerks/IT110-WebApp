@@ -15,7 +15,7 @@
           </button>
         </div>
         <div class="h-[calc(100%-4rem)]">
-          <Map ref="mapRef" :disabled="false" />
+          <Map ref="mapRef" :disabled="true" :skip-location="true" />
         </div>
       </div>
     </div>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import Map from '@/Components/map.vue';
 
 const props = defineProps({
@@ -41,25 +41,62 @@ defineEmits(['close']);
 
 const mapRef = ref(null);
 
+const getItemLocation = () => {
+  if (props.item && props.item.location) {
+    try {
+      // Parse the coordinates from the location string
+      const [lat, lng] = props.item.location.split(',').map(coord => parseFloat(coord.trim()));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        console.log('Found valid coordinates:', { lat, lng });
+        return { lat, lng };
+      }
+    } catch (error) {
+      console.error('Error parsing location:', error);
+    }
+  }
+  console.log('No valid location found in item:', props.item);
+  // Return default location if no valid coordinates found
+  return { lat: 8.9467, lng: 125.5449 }; // Default to Butuan City coordinates
+};
+
 const initializeMap = async () => {
-  if (mapRef.value && !mapRef.value.map) {
-    await mapRef.value.initializeMap();
+  try {
+    if (mapRef.value && !mapRef.value.map) {
+      console.log('Initializing map...');
+      await mapRef.value.initializeMap();
+    }
+    
+    // Get location after small delay to ensure map is ready
+    setTimeout(() => {
+      const location = getItemLocation();
+      console.log('Setting location:', location);
+      if (mapRef.value && mapRef.value.setLocation) {
+        mapRef.value.setLocation(location);
+      } else {
+        console.error('Map reference or setLocation method not found');
+      }
+    }, 500);
+  } catch (error) {
+    console.error('Error in initializeMap:', error);
   }
 };
 
-const setLocation = (location) => {
-  if (mapRef.value) {
-    mapRef.value.setLocation(location);
+// Watch for changes in the show prop
+watch(() => props.show, async (newVal) => {
+  if (newVal) {
+    await nextTick();
+    initializeMap();
   }
-};
+});
 
 onMounted(() => {
-  initializeMap();
+  if (props.show) {
+    initializeMap();
+  }
 });
 
 defineExpose({
   initializeMap,
-  setLocation,
   map: mapRef
 });
 </script>

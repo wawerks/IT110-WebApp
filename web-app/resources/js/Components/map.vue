@@ -70,6 +70,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    skipLocation: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {
@@ -107,7 +111,9 @@ export default {
   mounted() {
     this.$nextTick(() => {
       this.initializeMap();
-      this.getCurrentLocation();
+      if (!this.skipLocation) {
+        this.getCurrentLocation();
+      }
     });
   },
   methods: {

@@ -71,6 +71,12 @@
 
             <!-- Description -->
             <p class="text-gray-700 text-base mt-4">{{ item.description }}</p>
+            
+            <!-- Location -->
+            <!-- <div class="mt-2 flex items-center text-gray-600">
+              <i class="fa-solid fa-location-dot mr-2"></i>
+              <p class="text-sm">{{ item.location }}</p>
+            </div> -->
 
             <!-- Image -->
             <div v-if="item.image_url" class="mt-4 overflow-hidden rounded-lg">
@@ -87,7 +93,7 @@
 
               <button @click="showMap(item)" class="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-2">
                 <i class="fa-solid fa-location-dot"></i>
-                <span>See Location</span>
+                <span>See Item Location</span>
               </button>
             </div>
 
@@ -123,7 +129,8 @@ import axios from "axios";
 import HeaderBar from "@/Components/HeaderBar.vue";
 import FooterBar from "@/Components/FooterBar.vue";
 import CommentModal from "@/Components/CommentModal.vue";
-import MapModal from "@/Components/MapModal.vue"; // Import MapModal component
+import MapModal from "@/Components/MapModal.vue"; 
+import Map from "@/Components/map.vue"; // Import Map component
 import { router, usePage } from '@inertiajs/vue3';
 import { useRouter } from 'vue-router';
 
@@ -142,6 +149,7 @@ export default {
     const activeCommentModal = ref(null);
     const selectedItem = ref(null);
     const showMapModal = ref(false); // Add showMapModal ref
+    const mapRef = ref(null);
     const currentFilter = ref('all');
     const searchQuery = ref('');
 
