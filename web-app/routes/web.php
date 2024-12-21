@@ -48,7 +48,7 @@ Route::patch('/claims/{id}/status', [ClaimController::class, 'updateStatus']);
 // Notification Routes (Authenticated)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
-    Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications', [NotificationController::class, 'store']);
 });
 
