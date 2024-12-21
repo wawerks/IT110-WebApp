@@ -139,7 +139,7 @@ const openNotificationDetails = async (notification) => {
     // Show the modal
     showCommentModal.value = true;
     isOpen.value = false;
-    await markAsRead(notification.id);
+    // await markAsRead(notification.id);
   } catch (error) {
     console.error('Error in openNotificationDetails:', error);
     console.error('Error details:', error.response?.data || error.message);
@@ -341,24 +341,32 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString(undefined, options);
 };
 
-const markAsRead = async (notificationId) => {
-  try {
-    console.log('Marking notification as read:', notificationId);
-    await axios.put(`api/notifications/${notificationId}/read`);
-    
-    // Update the notification in our local state
-    const notification = notifications.value.find(n => n.id === notificationId);
-    if (notification) {
-      notification.read_at = new Date().toISOString();
-      // Update unread count
-      unreadCount.value = notifications.value.filter(n => !n.read_at).length;
-      console.log('Updated unread count after marking as read:', unreadCount.value);
-    }
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-    console.error('Error details:', error.response?.data || error.message);
-  }
-};
+
+// const markAsRead = async (notificationId) => {
+//   try {
+//     // Sending PUT request to mark the notification as read
+//     const response = await axios.put(`/notifications/${notificationId}/read`, {});
+
+//     // Check if the response indicates success (you can adjust this depending on your API response structure)
+//     if (response.status === 200) {
+//       // Find the notification in your local list
+//       const notification = notifications.value.find(n => n.id === notificationId);
+//       if (notification) {
+//         // Update the local notification's read status
+//         notification.read_at = new Date().toISOString();
+
+//         // Update the unread notification count
+//         unreadCount.value = notifications.value.filter(n => !n.read_at).length;
+//       }
+//     } else {
+//       console.error('Failed to mark notification as read:', response);
+//     }
+//   } catch (error) {
+//     console.error('Error marking notification as read:', error);
+//   }
+// };
+
+
 
 // Add watcher for notifications to update unread count
 watch(notifications, (newNotifications) => {

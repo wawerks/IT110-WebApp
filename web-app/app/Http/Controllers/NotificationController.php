@@ -101,27 +101,32 @@ class NotificationController extends Controller
         try {
 
             \Log::info('Marking notification as read', ['notification_id' => $id, 'user_id' => Auth::id()]);
-
+    
+            // Retrieve the notification by ID and user
             $notification = Notification::where('id', $id)
                 ->where('user_id', Auth::id())
                 ->first();
-
+    
             if (!$notification) {
                 return response()->json(['error' => 'Notification not found'], 404);
             }
 
-            // If notification is already marked as read, no need to update
+    
+            // If the notification is already marked as read, no further action needed
             if ($notification->read_at) {
-                return response()->noContent(); // Notification already read, no further action needed
-            }                  
-
+                return response()->noContent();
+            }
+    
+            // Mark the notification as read
             $notification->read_at = Carbon::now();
             $notification->save();
-
+    
             return response()->json([
                 'message' => 'Notification marked as read',
                 'notification' => $notification
             ], 200);
+
+    
         } catch (\Exception $e) {
             \Log::error('Error marking notification as read:', [
                 'notification_id' => $id,
@@ -131,6 +136,8 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Failed to mark notification as read'], 500);
         }
     }
+    
+    
 
     public function markAllAsRead(Request $request)
     {

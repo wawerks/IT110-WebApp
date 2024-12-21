@@ -18,22 +18,22 @@ class CommentController extends Controller
             if (!auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
-
+    
             // Validate the request
             $validatedData = $request->validate([
                 'item_type' => 'required|string|in:lost,found',
                 'item_id' => 'required|integer',
                 'text' => 'required|string|max:500',
             ]);
-
+    
             // Map item_type to full model class name
             $modelClass = $validatedData['item_type'] === 'lost' 
                 ? 'App\\Models\\LostItem' 
                 : 'App\\Models\\FoundItem';
-
+    
             // Find the item
             $item = $modelClass::findOrFail($validatedData['item_id']);
-
+    
             // Create the comment
             $comment = new Comment();
             $comment->user_id = auth()->id();
@@ -41,12 +41,15 @@ class CommentController extends Controller
             $comment->commentable_type = $modelClass;
             $comment->text = $validatedData['text'];
             $comment->save();
-
+    
             // Load the comment with user relationship
             $comment->load('user');
-
+    
             // Create notification for the item owner if it's not their own comment
             if ($item->user_id !== auth()->id()) {
+                // Get claim_user_id from item, assuming it exists on the model
+                $claimUserId = isset($item->claim_user_id) ? $item->claim_user_id : null;
+    
                 $notificationData = [
                     'title' => 'New Comment',
                     'message' => auth()->user()->name . ' commented on your ' . $validatedData['item_type'] . ' item "' . $item->item_name . '"',
@@ -55,9 +58,10 @@ class CommentController extends Controller
                     'comment_id' => $comment->id,
                     'item_name' => $item->item_name,
                     'commenter_name' => auth()->user()->name,
-                    'comment_text' => $validatedData['text']
+                    'comment_text' => $validatedData['text'],
+                    'user_id' => $item->user_id,
                 ];
-
+    
                 Notification::create([
                     'user_id' =>  auth()->id(),
                     'type' => 'comment',
@@ -65,7 +69,7 @@ class CommentController extends Controller
                     'read_at' => null
                 ]);
             }
-
+    
             return response()->json([
                 'message' => 'Comment created successfully',
                 'comment' => [
@@ -81,7 +85,7 @@ class CommentController extends Controller
                     'user_name' => $comment->user->name
                 ]
             ]);
-
+    
         } catch (\Exception $e) {
             Log::error('Error creating comment: ' . $e->getMessage());
             return response()->json([
@@ -90,6 +94,7 @@ class CommentController extends Controller
             ], 500);
         }
     }
+    
 
     public function show($id)
     {
