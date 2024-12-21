@@ -25,11 +25,19 @@ class NotificationController extends Controller
                 ->where('user_id', Auth::id())  // Checking if user_id matches the authenticated user's ID
                 ->whereNotNull('id');
         })
-        ->orWhereIn(DB::raw('(data->>\'item_id\')::bigint'), function ($query) {
+        ->orWhereIn(DB::raw("(data->>'item_id')::bigint"), function ($query) {
             $query->select('id')
                 ->from('found_items')
-                ->where('user_id', Auth::id())  // Checking if user_id matches the authenticated user's ID
+                ->where('user_id', Auth::id()) // Checking if user_id matches the authenticated user's ID
+                ->whereRaw("(data->>'item_type') = 'found'") // Correct condition for JSON field
                 ->whereNotNull('id');
+        })
+        ->orWhereIn(DB::raw("user_id"), function ($query) {
+            // Select item_ids from claims where claim_user_id matches user_id
+            $query->select('user_id')
+            ->from('claims')
+            ->whereRaw("(data->>'claim_user_id')::bigint = ?", [Auth::id()]) // Correct parameter binding
+            ->whereNotNull('item_id');
         })
             ->orderBy('created_at', 'desc')
             ->get()
@@ -39,21 +47,27 @@ class NotificationController extends Controller
     
                 // Get the comment author's name if this is a comment notification
                 $userName = 'Unknown User';
+                $claimUserId = null;
                 if (isset($data['comment_text'])) {
                     $commentUser = Comment::where('text', $data['comment_text'])
                         ->with('user') // Assuming there's a `user` relationship in Comment
                         ->first();
-        
+    
                     // If user exists, retrieve name
                     $userName = $commentUser && $commentUser->user ? $commentUser->user->name : 'Unknown User';
                 }
-
+    
+                $claimId = null;
                 if (isset($data['claim_id'])) {
                     // Find the claim by ID
                     $claim = Claim::find($data['claim_id']);
-                
-                    // If the claim exists, retrieve the name of the user who created it
+                    
+                    // If the claim exists, retrieve the claim_id and the name of the user who created it
+                    $claimId = $claim ? $claim->claim_id : null;
                     $userName = $claim && $claim->user ? $claim->user->name : 'Unknown User';
+    
+                    // Fetch claim's user_id
+                    $claimUserId = $claim ? $claim->user_id : null;  // Getting the user_id of the claim owner
                 }
     
                 // Format the date using Carbon
@@ -68,12 +82,18 @@ class NotificationController extends Controller
                     'read' => (bool) $notification->read_at,
                     'read_at' => $notification->read_at,
                     'created_at' => $createdAt,
-                    'userName' => $userName
+                    'userName' => $userName,
+                    'claim_id' => $claimId,   // Adding claim_id
+                    'claim_user_id' => $claimUserId  // Adding claim_user_id
                 ];
             });
     
         return response()->json(['notifications' => $notifications]);
     }
+    
+    
+    
+    
     
 
     public function markAsRead(Request $request, $id)

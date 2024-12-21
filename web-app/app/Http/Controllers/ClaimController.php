@@ -54,7 +54,7 @@ class ClaimController extends Controller
             // Find the item (assuming it's from the 'found_items' table)
             $item = FoundItem::findOrFail($validated['item_id']);
     
-            // Create notification for the item owner if it's not their own claim
+            // Create notification for the item owner (only if it's not their own claim)
             if ($item->user_id !== auth()->id()) {
                 $notificationData = [
                     'title' => 'New Claim',
@@ -63,7 +63,8 @@ class ClaimController extends Controller
                     'item_type' => 'found',
                     'claim_id' => $claim->claim_id,
                     'item_name' => $item->item_name,
-                    'claimer_name' => auth()->user()->name
+                    'claimer_name' => auth()->user()->name,
+                    'user_id' => $item->user_id,
                 ];
     
                 Notification::create([
@@ -74,8 +75,9 @@ class ClaimController extends Controller
                 ]);
             }
     
-            // Return a response
+            // Return a response (redirecting or returning success)
             return redirect('/newsfeed'); 
+    
         } catch (\Exception $e) {
             \Log::error('Error creating claim: ' . $e->getMessage());
             return response()->json([
@@ -84,6 +86,7 @@ class ClaimController extends Controller
             ], 500);
         }
     }
+    
     
     
     
@@ -136,66 +139,72 @@ class ClaimController extends Controller
     {
         try {
             DB::beginTransaction();
-        
+    
+            // Fetch the claim using claim_id
             $claim = Claim::where('claim_id', $id)->firstOrFail();  // Use claim_id for lookup
-     
+    
             // Validate the claim status
             $validated = $request->validate([
                 'claim_status' => 'required|in:approved,rejected',
             ]);
-     
+    
             // Update the claim status
             $claim->update([
                 'claim_status' => ucfirst($validated['claim_status']), // Capitalize first letter
             ]);
-            
-            // Assuming the claim is associated with an item from 'found_items'
-            $item = $claim->foundItem; // Using the relation 'foundItem' defined in the Claim model
-    
-            // Notification for the claim owner (the user who made the claim)
-            if ($claim->user_id !== auth()->id()) {
-                $notificationDataClaimOwner = [
-                    'title' => 'Claim Status Update',
-                    'message' => 'The status of your claim for the item "' . $item->item_name . '" has been updated to ' . $claim->claim_status,
-                    'item_id' => $item->id,
-                    'item_type' => 'found',
-                    'claim_id' => $claim->claim_id,
-                    'item_name' => $item->item_name,
-                    'claimer_name' => auth()->user()->name,
-                    'status' => $claim->claim_status
-                ];
-    
-                Notification::create([
-                    'user_id' => $claim->user_id, // Notify the claim owner
-                    'type' => 'claim',
-                    'data' => $notificationDataClaimOwner,
-                    'read_at' => null
-                ]);
-            }
-    
-            // Notification for the item owner (the user who owns the found item)
-            if ($item->user_id !== auth()->id()) {
-                $notificationDataItemOwner = [
-                    'title' => 'Claim Status Update',
-                    'message' => 'The claim status for your found item "' . $item->item_name . '" has been updated to ' . $claim->claim_status,
-                    'item_id' => $item->id,
-                    'item_type' => 'found',
-                    'claim_id' => $claim->claim_id,
-                    'item_name' => $item->item_name,
-                    'claimer_name' => auth()->user()->name,
-                    'status' => $claim->claim_status
-                ];
-    
-                Notification::create([
-                    'user_id' => $item->user_id, // Notify the item owner
-                    'type' => 'claim',
-                    'data' => $notificationDataItemOwner,
-                    'read_at' => null
-                ]);
-            }
     
             DB::commit();
-        
+    
+            // The claim owner (who made the claim)
+            $claimOwner = $claim->user; 
+            // The found item that was claimed
+            $foundItem = $claim->foundItem; 
+    
+            // Send notification to claim owner if the status has changed
+            // Do not notify the claim owner if the item is not theirs
+            if ($claimOwner->id !== Auth::id()) {
+                $notificationData = [
+                    'title' => 'Claim Status Update',
+                    'message' => 'The claim status for your submission "' . $foundItem->item_name . '" has been updated to ' . $claim->claim_status,
+                    'item_id' => $foundItem->id,
+                    'claim_id' => $claim->claim_id,
+                    'item_name' => $foundItem->item_name,
+                    'claimer_name' => $claimOwner->name,
+                    'status' => $claim->claim_status,
+                    'claim_user_id' => $claimOwner->id,  // Added claim_user_id here
+                ];
+    
+                Notification::create([
+                    'user_id' => $claimOwner->id,
+                    'type' => 'claim',
+                    'data' => $notificationData,
+                ]);
+            }
+    
+            // Send notification to the item owner (only if the claim status affects their item)
+            // Do not notify if the item is owned by the authenticated user (the person making the claim)
+            if ($foundItem->user_id !== Auth::id()) {
+                $notificationData = [
+                    'title' => 'Claim Status Update',
+                    'message' => 'The claim status for your found item "' . $foundItem->item_name . '" has been ' . $claim->claim_status,
+                    'item_id' => $foundItem->id,
+                    'item_type' => 'found',
+                    'claim_id' => $claim->claim_id,
+                    'item_name' => $foundItem->item_name,
+                    'claimer_name' => $claimOwner->name,
+                    'status' => $claim->claim_status,
+                ];
+    
+                Notification::create([
+                    'user_id' => $foundItem->user_id, // Notify the item owner
+                    'type' => 'claim',
+                    'data' => $notificationData,
+                ]);
+            }
+    
+            \Log::info("Notification sent to claim owner: {$claimOwner->id}", $notificationData);
+            \Log::info("Notification sent to item owner: {$foundItem->user_id}", $notificationData);
+    
             // Return the updated claim with related data
             return response()->json([
                 'success' => true,
@@ -205,17 +214,20 @@ class ClaimController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Claim not found'
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Failed to update claim status'
             ], 500);
         }
     }
+    
+    
+    
     
     
     
