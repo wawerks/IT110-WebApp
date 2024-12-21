@@ -31,13 +31,13 @@
                 </label>
                 <Link v-if="canResetPassword" :href="route('password.request')"
                     class="text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Forgot your password?
+                    Forgot your password?
                 </Link>
             </div>
 
             <div class="mt-6">
-                <PrimaryButton class="w-full justify-center"
-                    :class="{ 'opacity-50 cursor-not-allowed': form.processing }" :disabled="form.processing">
+                <PrimaryButton class="w-full justify-center" :class="{ 'opacity-50 cursor-not-allowed': form.processing }"
+                    :disabled="form.processing">
                     <template v-if="form.processing">
                         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
                             fill="none" viewBox="0 0 24 24">
@@ -49,7 +49,9 @@
                         </svg>
                         Logging in...
                     </template>
-                    <span v-else>Log in</span>
+                    <template v-else>
+                        Log in
+                    </template>
                 </PrimaryButton>
             </div>
 
@@ -57,7 +59,7 @@
                 <span class="text-sm text-gray-600">Don't have an account? </span>
                 <Link :href="route('register')"
                     class="text-sm text-teal-600 hover:text-teal-500 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Register now
+                    Register now
                 </Link>
             </div>
         </form>
@@ -72,7 +74,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const props = defineProps({
     canResetPassword: {
         type: Boolean,
@@ -90,18 +94,49 @@ const form = useForm({
     email: '',
     password: '',
     remember: false,
+    errors: {},
+    processing: false
 });
 
-const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => {
-            form.reset('password');
-            if (!form.hasErrors) {
-                emit('close');
+const submit = async () => {
+    try {
+        form.processing = true;
+        form.errors = {};
+
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                email: form.email,
+                password: form.password,
+                remember: form.remember
+            })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            if (data.errors) {
+                form.errors = data.errors;
+            } else {
+                form.errors.email = 'Failed to login. Please try again.';
             }
-        },
-        preserveScroll: true
-    });
+            return;
+        }
+
+        // Reset form and close modal
+        form.reset();
+        emit('close');
+        
+        // Redirect to newsfeed
+        window.location.href = '/newsfeed';
+    } catch (error) {
+        form.errors.email = 'An error occurred. Please try again.';
+    } finally {
+        form.processing = false;
+    }
 };
 </script>
 

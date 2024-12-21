@@ -11,6 +11,7 @@ use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\SocialiteController;
 use App\Models\ClaimStatusReport;
 use App\Http\Middleware\CheckRole;
 use App\Models\User;
@@ -21,6 +22,13 @@ use Inertia\Inertia;
 
 Route::get('/claim-status-reports', function () {
     return ClaimStatusReport::all();
+});
+
+
+// Socialite Google Authentication Routes
+Route::controller(SocialiteController::class)->group(function () {
+    Route::get('auth/google', 'googleLogin')->name('auth.google');
+    Route::get('auth/google-callback', 'googleAuthentication')->name('auth.google-callback');
 });
 
 Route::resource('users', UserController::class);
@@ -68,7 +76,7 @@ Route::middleware('auth')->group(function () {
     // Add the newsfeed route here
     Route::get('/newsfeed', function () {
         return Inertia::render('NewsFeed'); // 'NewsFeed' is the Vue component name
-    })->middleware('auth'); // Add auth middleware if needed
+    })->middleware(['auth', 'verified'])->name('newsfeed'); // Add auth middleware if needed
 });
 
 // Admin Routes

@@ -9,60 +9,99 @@ use App\Models\User;
 use App\Models\LostItem;
 use App\Models\FoundItem;
 use App\Models\Comment;
+use App\Models\Claim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = Notification::where('user_id', Auth::id())
+        $notifications = Notification::whereIn(DB::raw('(data->>\'item_id\')::bigint'), function ($query) {
+            $query->select('id')
+                ->from('lost_items')
+                ->where('user_id', Auth::id())  // Checking if user_id matches the authenticated user's ID
+                ->whereNotNull('id');
+        })
+        ->orWhereIn(DB::raw("(data->>'item_id')::bigint"), function ($query) {
+            $query->select('id')
+                ->from('found_items')
+                ->where('user_id', Auth::id()) // Checking if user_id matches the authenticated user's ID
+                ->whereRaw("(data->>'item_type') = 'found'") // Correct condition for JSON field
+                ->whereNotNull('id');
+        })
+        ->orWhereIn(DB::raw("user_id"), function ($query) {
+            // Select item_ids from claims where claim_user_id matches user_id
+            $query->select('user_id')
+            ->from('claims')
+            ->whereRaw("(data->>'claim_user_id')::bigint = ?", [Auth::id()]) // Correct parameter binding
+            ->whereNotNull('item_id');
+        })
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($notification) {
                 // Get the data - it's already an array due to the cast in the model
                 $data = $notification->data;
-                
+    
                 // Get the comment author's name if this is a comment notification
                 $userName = 'Unknown User';
-                if ($notification->type === 'comment') {
-                    if (isset($data['commenter_name'])) {
-                        $userName = $data['commenter_name'];
-                    } elseif (isset($data['comment_id'])) {
-                        $comment = Comment::with('user')->find($data['comment_id']);
-                        if ($comment && $comment->user) {
-                            $userName = $comment->user->name;
-                            // Update the notification data to include the commenter name
-                            $data['commenter_name'] = $userName;
-                            $notification->data = $data;
-                            $notification->save();
-                        }
-                    }
+                $claimUserId = null;
+                if (isset($data['comment_text'])) {
+                    $commentUser = Comment::where('text', $data['comment_text'])
+                        ->with('user') // Assuming there's a `user` relationship in Comment
+                        ->first();
+    
+                    // If user exists, retrieve name
+                    $userName = $commentUser && $commentUser->user ? $commentUser->user->name : 'Unknown User';
                 }
-
-                // Format the date
+    
+                $claimId = null;
+                if (isset($data['claim_id'])) {
+                    // Find the claim by ID
+                    $claim = Claim::find($data['claim_id']);
+                    
+                    // If the claim exists, retrieve the claim_id and the name of the user who created it
+                    $claimId = $claim ? $claim->claim_id : null;
+                    $userName = $claim && $claim->user ? $claim->user->name : 'Unknown User';
+    
+                    // Fetch claim's user_id
+                    $claimUserId = $claim ? $claim->user_id : null;  // Getting the user_id of the claim owner
+                }
+    
+                // Format the date using Carbon
                 $createdAt = $notification->created_at ? $notification->created_at->format('M d, Y, h:i A') : null;
-
+    
                 return [
                     'id' => $notification->id,
                     'type' => $notification->type,
                     'title' => $notification->title,
                     'message' => $notification->message,
                     'data' => $data,
-                    'read' => (bool)$notification->read_at,
+                    'read' => (bool) $notification->read_at,
                     'read_at' => $notification->read_at,
                     'created_at' => $createdAt,
-                    'userName' => $userName
+                    'userName' => $userName,
+                    'claim_id' => $claimId,   // Adding claim_id
+                    'claim_user_id' => $claimUserId  // Adding claim_user_id
                 ];
             });
-
+    
         return response()->json(['notifications' => $notifications]);
     }
+    
+    
+    
+    
+    
 
     public function markAsRead(Request $request, $id)
     {
         try {
+
+            \Log::info('Marking notification as read', ['notification_id' => $id, 'user_id' => Auth::id()]);
+
             $notification = Notification::where('id', $id)
                 ->where('user_id', Auth::id())
                 ->first();
@@ -71,19 +110,18 @@ class NotificationController extends Controller
                 return response()->json(['error' => 'Notification not found'], 404);
             }
 
-            if (!$notification->read_at) {
-                $notification->read_at = Carbon::now()->toDateTimeString();
-                $notification->save();
-            }
+            // If notification is already marked as read, no need to update
+            if ($notification->read_at) {
+                return response()->noContent(); // Notification already read, no further action needed
+            }                  
+
+            $notification->read_at = Carbon::now();
+            $notification->save();
 
             return response()->json([
                 'message' => 'Notification marked as read',
-                'notification' => [
-                    'id' => $notification->id,
-                    'read_at' => $notification->read_at,
-                    'data' => $notification->data
-                ]
-            ]);
+                'notification' => $notification
+            ], 200);
         } catch (\Exception $e) {
             \Log::error('Error marking notification as read:', [
                 'notification_id' => $id,

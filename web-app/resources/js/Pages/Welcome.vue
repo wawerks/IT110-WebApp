@@ -69,11 +69,13 @@
         <section id="contact" class="py-20 bg-[#219B9D] text-white">
             <div class="container mx-auto px-4 text-center">
                 <h2 class="text-3xl font-bold mb-8">Ready to Get Started?</h2>
-                <p class="text-xl mb-8">Join our community and start finding lost items today.</p>
+                <p class="text-xl mb-8">Join our community and start finding lost items today!</p>
+                <!-- Only show 'Join Now' if not logged in -->
                 <button v-if="!isLoggedIn" @click="showLoginModal = true"
                     class="bg-teal-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-teal-600 transition-colors">
                     Join Now
                 </button>
+                <!-- Show 'Go to Newsfeed' if logged in -->
                 <button v-else @click="redirectToNewsfeed"
                     class="bg-teal-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-teal-600 transition-colors">
                     Go to Newsfeed

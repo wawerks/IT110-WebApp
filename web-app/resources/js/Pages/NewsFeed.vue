@@ -5,103 +5,106 @@
     <!-- Main Content -->
     <div class="flex-grow max-w-5xl mx-auto py-12 px-4 md:px-8">
       <!-- Title -->
-      <h1 class="text-4xl font-semibold text-center text-blue-900 mb-8"> News Feed</h1>
+      <h1 class="text-4xl font-semibold text-center text-blue-900 mb-8">News Feed</h1>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center items-center space-x-2 text-xl text-gray-600">
-        <div class="animate-spin rounded-full border-t-4 border-blue-500 w-8 h-8"></div>
-        <span>Loading...</span>
+      <!-- Search Bar -->
+      <div class="max-w-xl mx-auto mb-6">
+        <div class="search-wrapper">
+          <input v-model="searchQuery" type="text" placeholder="Search items..." class="search-input"
+            @input="validateInput" />
+          <button class="search-button" @click="handleSearch">
+            <i class="fa-solid fa-magnifying-glass" style="color: white; font-size: 18px;"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Posts Section -->
-      <div v-else>
-        <div v-for="item in lostItems" :key="item.id"
-          class="bg-white shadow-lg rounded-2xl mb-8 p-6 hover:shadow-2xl hover:scale-102 transition-all duration-300">
-          <!-- LOST or FOUND Label -->
-          <div :class="item.isFound ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-            class="uppercase text-xs font-semibold py-1 px-3 rounded-full inline-block mb-4">
-            {{ item.isFound ? 'FOUND' : 'LOST' }}
-          </div>
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
+        <button @click="currentFilter = 'all'" :class="[
+          'px-4 sm:px-6 py-2 rounded-full transition-all duration-200 whitespace-nowrap',
+          currentFilter === 'all'
+            ? 'bg-blue-500 text-white shadow-lg'
+            : 'bg-white text-gray-600 hover:bg-gray-50'
+        ]">
+          All Items
+        </button>
+        <button @click="currentFilter = 'lost'" :class="[
+          'px-4 sm:px-6 py-2 rounded-full transition-all duration-200 whitespace-nowrap',
+          currentFilter === 'lost'
+            ? 'bg-red-500 text-white shadow-lg'
+            : 'bg-white text-gray-600 hover:bg-gray-50'
+        ]">
+          Lost Items
+        </button>
+        <button @click="currentFilter = 'found'" :class="[
+          'px-4 sm:px-6 py-2 rounded-full transition-all duration-200 whitespace-nowrap',
+          currentFilter === 'found'
+            ? 'bg-green-500 text-white shadow-lg'
+            : 'bg-white text-gray-600 hover:bg-gray-50'
+        ]">
+          Found Items
+        </button>
+      </div>
 
-          <!-- Post Header -->
-          <div class="flex items-center space-x-4 mb-4">
-            <h2 class="text-xl font-semibold text-gray-800">{{ item.item_name }}</h2>
-            <p class="text-sm text-gray-500">Posted by: {{ item.userName }} | {{ formatDate(item.created_at) }}</p>
-          </div>
+      <div>
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center space-x-2 text-xl text-gray-600">
+          <div class="animate-spin rounded-full border-t-4 border-blue-500 w-8 h-8"></div>
+          <span>Loading...</span>
+        </div>
 
-          <!-- Description -->
-          <p class="text-gray-700 text-base mb-4">{{ item.description }}</p>
+        <!-- Posts Section -->
+        <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <div v-for="item in filteredItems" :key="item.id"
+            class="bg-white shadow-lg rounded-2xl p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300">
+            <!-- LOST or FOUND Label -->
+            <div :class="item.isFound ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+              class="uppercase text-xs font-semibold py-1 px-3 rounded-full inline-block mb-4">
+              {{ item.isFound ? 'FOUND' : 'LOST' }}
+            </div>
 
-          <!-- Image -->
-          <div v-if="item.image_url" class="mb-4 overflow-hidden rounded-lg">
-            <img :src="item.image_url" alt="Lost Item" class="w-full object-cover rounded-lg shadow-sm" />
-          </div>
-          <div v-if="item.isFound && !item.isOwner" class="flex justify-end">
-            <button 
-              @click="handleClaim(item)"
-              class="bg-green-500 hover:bg-green-600 mt-5 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Claim Item</span>
-            </button>
-          </div>
+            <!-- Post Header -->
+            <div class="flex flex-col space-y-2">
+              <h2 class="text-xl font-semibold text-gray-800">{{ item.item_name }}</h2>
+              <p class="text-sm text-gray-500">Posted by: {{ item.userName }} | {{ formatDate(item.created_at) }}</p>
+            </div>
 
-          <!-- Comments Section -->
-          <div class="">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Comments</h3>
+            <!-- Description -->
+            <p class="text-gray-700 text-base mt-4">{{ item.description }}</p>
+            
+            <!-- Location -->
+            <!-- <div class="mt-2 flex items-center text-gray-600">
+              <i class="fa-solid fa-location-dot mr-2"></i>
+              <p class="text-sm">{{ item.location }}</p>
+            </div> -->
 
-            <div class="flex items-center space-x-4">
-              <!-- Comment Button -->
+            <!-- Image -->
+            <div v-if="item.image_url" class="mt-4 overflow-hidden rounded-lg">
+              <img :src="item.image_url" alt="Lost Item" class="w-full h-48 object-cover" />
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 flex flex-wrap items-center gap-4">
               <button @click="openCommentModal(item)"
-                class="flex items-center space-x-2 text-blue-500 hover:text-blue-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-2" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M21 15a2 2 0 10-4 0 2 2 0 004 0zM19 19H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2z" />
-                </svg>
+                class="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-2">
+                <i class="fa-regular fa-comment"></i>
                 <span>Comments ({{ item.comments?.length || 0 }})</span>
               </button>
 
-              <!-- See Map Text -->
-              <a href="#" @click.prevent="showMap(item)" class="text-blue-500 hover:text-blue-600">See Location</a>
+              <button @click="showMap(item)" class="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-2">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>See Item Location</span>
+              </button>
             </div>
 
-            <!-- Comment Modal -->
-            <CommentModal
-              v-if="activeCommentModal === item.id"
-              :show="true"
-              :comments="item.comments || []"
-              :item="selectedItem || item"
-              :item-id="item.id"
-              :item-type="item.isFound ? 'found' : 'lost'"
-              @close="closeCommentModal"
-              @submit-comment="submitComment"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Map Modal -->
-    <div v-if="showMapModal" class="fixed inset-0 z-50">
-      <!-- Backdrop with blur -->
-      <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
-      
-      <!-- Modal Content -->
-      <div class="relative flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 h-[600px] relative">
-          <div class="flex justify-between items-center p-4 border-b">
-            <h3 class="text-lg font-semibold">Item Location</h3>
-            <button @click="closeMap" class="text-gray-500 hover:text-gray-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="h-[calc(100%-4rem)]">
-            <Map ref="mapRef" :disabled="false" />
+            <!-- Claim Button -->
+            <div v-if="item.isFound && !item.isOwner" class="mt-4">
+              <button @click="handleClaim(item)"
+                class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200">
+                <i class="fa-solid fa-check-circle"></i>
+                <span>Claim Item</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -109,24 +112,35 @@
 
     <!-- Footer -->
     <FooterBar />
+
+    <!-- Map Modal -->
+    <MapModal v-if="showMapModal" :show="showMapModal" :item="selectedItem" @close="closeMap" />
+
+    <!-- Comment Modal -->
+    <CommentModal v-if="activeCommentModal" :show="true" :comments="selectedItem?.comments || []" :item="selectedItem"
+      :item-id="selectedItem?.id" :item-type="selectedItem?.isFound ? 'found' : 'lost'" @close="closeCommentModal"
+      @submit-comment="submitComment" />
   </div>
 </template>
 
 <script>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import axios from "axios";
 import HeaderBar from "@/Components/HeaderBar.vue";
 import FooterBar from "@/Components/FooterBar.vue";
 import CommentModal from "@/Components/CommentModal.vue";
+import MapModal from "@/Components/MapModal.vue"; 
 import Map from "@/Components/map.vue"; // Import Map component
 import { router, usePage } from '@inertiajs/vue3';
+import { useRouter } from 'vue-router';
 
 export default {
   name: "NewsFeed",
-  components: { HeaderBar, FooterBar, CommentModal, Map }, // Add Map component
+  components: { HeaderBar, FooterBar, CommentModal, MapModal }, // Add MapModal component
   setup() {
     const page = usePage();
     const lostItems = ref([]);
+    const foundItems = ref([]);
     const loading = ref(true);
     const newComments = ref({});
     const userName = ref(null);
@@ -136,6 +150,41 @@ export default {
     const selectedItem = ref(null);
     const showMapModal = ref(false); // Add showMapModal ref
     const mapRef = ref(null);
+    const currentFilter = ref('all');
+    const searchQuery = ref('');
+
+    const filteredItems = computed(() => {
+      let items = lostItems.value;
+
+      // First filter by search query
+      if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim();
+        items = items.filter(item =>
+          item.item_name.toLowerCase().includes(query) ||
+          item.description.toLowerCase().includes(query)
+        );
+      }
+
+      // Then filter by status
+      if (currentFilter.value === 'lost') return items.filter(item => !item.isFound);
+      if (currentFilter.value === 'found') return items.filter(item => item.isFound);
+      return items;
+    });
+
+    const redirectToNewsfeed = () => {
+      if (isLoggedIn.value) {
+        router.push('/newsfeed'); // Use router.push for proper navigation within the app
+      } else {
+        showLoginModal.value = true; // Show login modal if not logged in
+      }
+    };
+
+
+    const handleSearch = () => {
+      // Optional: Add any additional search logic here
+
+      // For now, the computed property handles the filtering automatically
+    };
 
     // Get CSRF token and current user's ID
     const initializeUserData = () => {
@@ -191,11 +240,11 @@ export default {
 
         const lostPosts = lost.data.map(async (item) => {
           const user = await fetchUserById(item.user_id);
-          console.log('Lost Item:', { 
+          console.log('Lost Item:', {
             itemId: item.id,
-            userId: item.user_id, 
+            userId: item.user_id,
             currentUserId: currentUserId.value,
-            isOwner: item.user_id === currentUserId.value 
+            isOwner: item.user_id === currentUserId.value
           });
           return {
             ...item,
@@ -209,11 +258,11 @@ export default {
 
         const foundPosts = found.data.map(async (item) => {
           const user = await fetchUserById(item.user_id);
-          console.log('Found Item:', { 
+          console.log('Found Item:', {
             itemId: item.id,
-            userId: item.user_id, 
+            userId: item.user_id,
             currentUserId: currentUserId.value,
-            isOwner: item.user_id === currentUserId.value 
+            isOwner: item.user_id === currentUserId.value
           });
           return {
             ...item,
@@ -226,6 +275,7 @@ export default {
         });
 
         lostItems.value = [...await Promise.all(lostPosts), ...await Promise.all(foundPosts)];
+        foundItems.value = [...await Promise.all(lostPosts), ...await Promise.all(foundPosts)];
         fetchComments();
       } catch (error) {
         console.error("Error fetching posts:", error.message);
@@ -249,13 +299,13 @@ export default {
     const fetchComments = async () => {
       try {
         console.log("Fetching comments...");
-        
+
         for (let item of lostItems.value) {
           try {
             // Determine item type based on isFound property
             const itemType = item.isFound ? 'found' : 'lost';
             console.log(`Fetching comments for ${itemType} item ${item.id}`);
-            
+
             const response = await axios.get(`/comments/${itemType}/${item.id}`);
             console.log(`Comments response for item ${item.id}:`, response.data);
 
@@ -274,7 +324,7 @@ export default {
 
             // Sort comments by date, newest first
             item.comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            
+
             console.log(`Updated comments for item ${item.id}:`, item.comments);
           } catch (error) {
             console.error(`Error fetching comments for item ${item.id}:`, error);
@@ -306,12 +356,12 @@ export default {
           // Find the item in either lostItems or foundItems
           const items = data.itemType.toLowerCase() === 'lost' ? lostItems.value : foundItems.value;
           const item = items.find(i => i.id === data.itemId);
-          
+
           if (item) {
             if (!item.comments) {
               item.comments = [];
             }
-            
+
             // Add the new comment with user information
             const newComment = {
               ...response.data.comment,
@@ -353,23 +403,13 @@ export default {
 
     // Show map modal and set location
     const showMap = (item) => {
+      selectedItem.value = item;
       showMapModal.value = true;
-      nextTick(async () => {
-        if (mapRef.value) {
-          // Initialize map if needed
-          if (!mapRef.value.map) {
-            await mapRef.value.initializeMap();
-          }
-          
-          // Convert location string to lat/lng object
-          const [lat, lng] = item.location.split(',').map(Number);
-          mapRef.value.setLocation({ lat, lng });
-        }
-      });
     };
 
     const closeMap = () => {
       showMapModal.value = false;
+      selectedItem.value = null;
     };
 
     // Format date helper function
@@ -391,6 +431,7 @@ export default {
 
     return {
       lostItems,
+      foundItems,
       loading,
       currentUserId,
       csrfToken,
@@ -407,13 +448,78 @@ export default {
       showMapModal,
       showMap,
       closeMap,
-      mapRef,
+      currentFilter,
+      searchQuery,
+      filteredItems,
+      handleSearch,
     };
+  },
+  methods: {
+    validateInput(event) {
+      const regex = /^[a-zA-Z0-9 ._-]*$/;
+      if (!regex.test(event.target.value)) {
+        this.searchQuery = event.target.value.replace(/[^a-zA-Z0-9 ._-]/g, ''); 
+      }
+    },
+
+    handleSearch() {
+      console.log("Searching for:", this.searchQuery);
+    }
   }
 };
+
 </script>
 
 <style scoped>
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  width: 100%;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: #666;
+  background: transparent;
+  min-width: 0;
+}
+
+.search-button {
+  background: #40E0D0;
+  border: none;
+  padding: 12px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.search-button:hover {
+  background: #3CD0C0;
+}
+
+@media (max-width: 640px) {
+  .search-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .search-button {
+    padding: 10px;
+    width: 40px;
+  }
+}
+
 /* === Global Layout Improvements === */
 body {
   font-family: 'Arial', sans-serif;
@@ -457,6 +563,46 @@ body {
 
 .text-gray-500 {
   color: #6b7280;
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: #666;
+  background: transparent;
+  width: 100%;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-button {
+  background: #40E0D0;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  min-width: 50px;
+}
+
+.search-button:hover {
+  background: #3CD0C0;
 }
 
 .max-w-5xl {

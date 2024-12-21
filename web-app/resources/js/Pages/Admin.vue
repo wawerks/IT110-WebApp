@@ -3,7 +3,7 @@
     <!-- Top Navigation Bar -->
     <v-app-bar app color="white" style="min-height: 80px;">
       <v-toolbar-title>
-        <div class="d-flex align-center ">
+        <div class="d-flex align-center">
           <!-- Hamburger Menu on Mobile -->
           <v-btn icon @click="toggleSidebar" class="d-md-none">
             <v-icon class="text-teal">mdi-menu</v-icon>
@@ -17,9 +17,6 @@
         </div>
       </v-toolbar-title>
 
-      
-
-     
       <!-- Logout Button -->
       <v-btn text color="secondary" class="logout-btn d-none d-sm-flex" @click="handleSignOut" style="margin-right: 80px;">
         Logout
@@ -32,12 +29,13 @@
     </v-app-bar>
 
     <!-- Sidebar Navigation -->
-    <v-navigation-drawer 
-      app 
-      v-model="sidebarVisible" 
-      :mini-variant="isMobile && !sidebarVisible" 
-      :permanent="!isMobile" 
+    <v-navigation-drawer
+      app
+      v-model="sidebarVisible"
+      :mini-variant="isMobile && !sidebarVisible"
+      :permanent="!isMobile"
       temporary
+      :class="{'v-navigation-drawer-custom--hidden': !sidebarVisible}"
       class="v-navigation-drawer-custom"
     >
       <v-list dense class="pt-5 mt-5">
@@ -151,22 +149,16 @@ onMounted(() => {
   background-color: #333333;
   color: white;
   max-width: 250px;
-  transition: width 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform: translateX(0); /* Default position when visible */
 }
 
-.v-navigation-drawer .v-list-item {
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-  color: white;
-  padding: 10px 16px;
+.v-navigation-drawer-custom--hidden {
+  transform: translateX(-100%); /* Hidden position when closed */
+  opacity: 0; /* Fades out smoothly */
 }
 
-.v-navigation-drawer .v-icon {
-  margin-right: 12px;
-  font-size: 24px;
-}
-
+/* Sidebar Item Hover Effect */
 .v-navigation-drawer .v-list-item:hover {
   background-color: #555555;
 }

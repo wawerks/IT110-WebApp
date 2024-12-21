@@ -1,68 +1,41 @@
 <template>
   <div class="relative">
-    <button class="relative focus:outline-none" @click="toggleDropdown">
-      <svg class="w-6 h-6 text-gray-600 hover:text-teal-500" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z">
-        </path>
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22c1.656 0 3-1.343 3-3H9c0 1.657 1.344 3 3 3z">
-        </path>
+    <button @click="toggleDropdown" class="relative p-2 text-gray-600 hover:text-teal-500 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
       </svg>
 
       <span v-if="unreadCount > 0"
-        class="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
         {{ unreadCount }}
       </span>
     </button>
 
-    <div v-if="isOpen" class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-      <div class="max-h-[80vh] overflow-y-auto">
-        <div class="py-1">
-          <h3 class="px-4 py-2 text-lg font-medium text-gray-900">Notifications</h3>
-            
-          <!-- No notifications message -->
-          <div v-if="notifications.length === 0" class="px-4 py-3 text-sm text-gray-700">
-            No notifications
-          </div>
-
-          <!-- Notification items -->
-          <div v-for="notification in notifications" 
-            :key="notification.id"
-            @click="openNotificationDetails(notification)"
-            class="px-4 py-3 hover:bg-gray-100 cursor-pointer"
-            :class="{ 'bg-gray-50': !notification.read_at }">
-              
-            <!-- User Info and Status -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold">
-                  {{ notification.userName?.[0]?.toUpperCase() || 'U' }}
-                </div>
-                <div>
-                  <p class="font-medium text-gray-900">{{ notification.data.commenter_name || notification.data.title }}</p>
-                  <p class="text-sm text-gray-500">
-                    <template v-if="notification.type === 'comment'">
-                      commented on your {{ notification.data.item_type }} item 
-                      <span class="font-medium">"{{ notification.data.item_name }}"</span>
-                    </template>
-                    <template v-else>
-                      {{ notification.data.message }}
-                    </template>
-                  </p>
-                </div>
-              </div>
-              <span v-if="!notification.read_at" 
-                class="bg-red-500 w-2.5 h-2.5 rounded-full"
-                title="Unread notification"></span>
-            </div>
-              
-            <!-- Timestamp -->
-            <p class="mt-1 text-sm text-gray-500">
-              {{ formatDate(notification.created_at) }}
-            </p>
-          </div>
+    <!-- Notification Dropdown -->
+    <div v-if="isOpen" class="notification-dropdown">
+      <div class="notification-header">
+        <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
+      </div>
+      
+      <div class="notification-content">
+        <div v-if="notifications.length === 0" class="p-4 text-center text-gray-500">
+          No notifications
         </div>
+        <template v-else>
+          <div v-for="notification in notifications" 
+            :key="notification.id" 
+            class="notification-item"
+            @click="openNotificationDetails(notification)">
+            <div class="flex items-start justify-between">
+              <div class="flex-grow">
+                <p class="text-sm font-medium text-gray-900">{{ notification.data.title }}</p>
+                <p class="text-sm text-gray-600">{{ notification.data.message }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ formatDate(notification.created_at) }}</p>
+              </div>
+              <div v-if="!notification.read_at" class="unread-indicator mt-1 ml-2"></div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -290,7 +263,7 @@ const fetchNotifications = async () => {
       return {
         ...notification,
         data: parsedData,
-        userName: parsedData.commenter_name || notification.user?.name || 'Unknown User'
+        userName: notification.userName || 'Unknown User'
       };
     });
 
@@ -371,7 +344,7 @@ const formatDate = (date) => {
 const markAsRead = async (notificationId) => {
   try {
     console.log('Marking notification as read:', notificationId);
-    await axios.put(`/notifications/${notificationId}/read`);
+    await axios.put(`api/notifications/${notificationId}/read`);
     
     // Update the notification in our local state
     const notification = notifications.value.find(n => n.id === notificationId);
@@ -403,6 +376,52 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  margin-top: 0.5rem;
+  width: 300px; /* Adjusted from 20rem to 300px for exact width */
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+@media (max-width: 768px) {
+  .notification-dropdown {
+    width: 300px;    right: -50px; /* Adjusted positioning for mobile */
+  }
+}
+
+.notification-item {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: #f3f4f6;
+}
+
+.notification-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: white;
+}
+
+.notification-content {
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.unread-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: #3b82f6;
+}
+
 button svg {
   width: 24px;
   height: 24px;
@@ -412,15 +431,20 @@ button:focus {
   outline: none;
 }
 
-.notification-dropdown {
-  width: 16rem;
-}
-
 .notification-dropdown div {
   cursor: pointer;
 }
 
 .notification-dropdown div:hover {
   background-color: #f3f4f6;
+}
+
+.notification-container {
+  height: calc(100vh - 4rem);
+  padding-bottom: 4rem;
+}
+
+.close-button {
+  padding: 0.75rem;
 }
 </style>
