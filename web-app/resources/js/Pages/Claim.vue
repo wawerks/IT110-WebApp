@@ -66,9 +66,13 @@
                                         <!-- Submit Button -->
                                         <button 
                                             @click="submitClaim" 
-                                            :disabled="!imagePreview"
-                                            class="mt-4 w-full px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200">
-                                            Submit Claim
+                                            :disabled="!imagePreview || isSubmitting"
+                                            class="mt-4 w-full bg-blue-500 text-white rounded-lg py-3 px-6 hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                        >
+                                            <span v-if="isSubmitting" class="inline-block mr-2">
+                                                <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+                                            </span>
+                                            <span>{{ isSubmitting ? 'Submitting...' : 'Submit Claim' }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -106,6 +110,7 @@ const props = defineProps({
 
 const imagePreview = ref(null);
 const imageFile = ref(null);
+const isSubmitting = ref(false);
 
 const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -124,45 +129,42 @@ const removeImage = () => {
     imageFile.value = null;
 };
 
-const submitClaim = () => {
-    // Ensure file and item exist
+const submitClaim = async () => {
     if (!imageFile.value || !props.item) {
         alert("Please upload an image and ensure the item exists.");
         return;
     }
 
-    console.log("Image File:", imageFile.value); // Log the file value
-    console.log("Item:", props.item); // Log the item object
+    isSubmitting.value = true;
 
-    const formData = new FormData();
-    formData.append('proof_of_ownership', imageFile.value); // Attach the file
-    formData.append('item_id', props.item.id); // Attach the item's ID
-    formData.append('claim_status', 'Pending'); // Correct the claim status value
+    try {
+        const formData = new FormData();
+        formData.append('proof_of_ownership', imageFile.value);
+        formData.append('item_id', props.item.id);
+        formData.append('claim_status', 'Pending');
 
-    // Log the FormData content
-    for (const pair of formData.entries()) {
-        console.log(`${pair[0]}:`, pair[1]);
+        router.post('/claims', formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                alert('Claim submitted successfully!');
+                imagePreview.value = null;
+                imageFile.value = null;
+                router.visit('/newsfeed'); 
+            },
+            onError: (errors) => {
+                console.error('Submission errors:', errors);
+                alert('Failed to submit claim. Please try again.');
+            },
+            onFinish: () => {
+                isSubmitting.value = false;
+            }
+        });
+    } catch (error) {
+        console.error('Error submitting claim:', error);
+        alert('An unexpected error occurred. Please try again.');
+        isSubmitting.value = false;
     }
-
-    // Use `router.post` to send the form data
-    router.post('/claims', formData, {
-        forceFormData: true,
-        onSuccess: () => {
-            alert("Claim submitted successfully!");
-            imagePreview.value = null;
-            imageFile.value = null;
-
-            console.log("Form submission succeeded. Image preview and file reset.");
-        },
-        onError: (errors) => {
-            console.error("Submission failed:", errors);
-            alert("Failed to submit the claim. Please try again.");
-        },
-    });
 };
-
-
-
 
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
