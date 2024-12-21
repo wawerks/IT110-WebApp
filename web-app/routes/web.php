@@ -76,7 +76,7 @@ Route::middleware('auth')->group(function () {
     // Add the newsfeed route here
     Route::get('/newsfeed', function () {
         return Inertia::render('NewsFeed'); // 'NewsFeed' is the Vue component name
-    })->middleware('auth'); // Add auth middleware if needed
+    })->middleware(['auth', 'verified'])->name('newsfeed'); // Add auth middleware if needed
 });
 
 // Admin Routes

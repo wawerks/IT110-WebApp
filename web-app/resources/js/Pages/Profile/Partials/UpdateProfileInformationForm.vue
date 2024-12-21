@@ -20,6 +20,12 @@ const form = useForm({
     name: user.name,
     email: user.email,
 });
+
+// Filter and sanitize input for the 'name' field
+const sanitizeInput = (event) => {
+    // Sanitize input by allowing only letters, numbers, spaces, dots, underscores, and hyphens
+    form.name = form.name.replace(/[^a-zA-Z0-9 ._-]/g, '');
+};
 </script>
 
 <template>
@@ -36,7 +42,12 @@ const form = useForm({
         <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
             <div>
                 <InputLabel for="name" value="Name" />
-                <TextInput id="name" type="text" v-model="form.name" required 
+                <TextInput 
+                    id="name" 
+                    type="text" 
+                    v-model="form.name" 
+                    required 
+                    @input="sanitizeInput"  
                     class="mt-1 block w-full rounded-md border-gray-300 focus:ring-primary focus:border-primary" 
                 />
                 <InputError :message="form.errors.name" class="mt-2" />

@@ -326,10 +326,6 @@ onMounted(fetchItems);
     font-size: 1.5rem;
 }
 
-.font-semibold {
-
-}
-
 .font-medium {
     font-weight: 500;
 }

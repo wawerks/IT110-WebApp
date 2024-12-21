@@ -57,7 +57,8 @@
             <form @submit.prevent="submitEditForm">
               <div class="form-group">
                 <label for="editItemName">Item Name</label>
-                <input type="text" id="editItemName" v-model="currentPost.item_name" required />
+                <input type="text" id="editItemName" v-model="currentPost.item_name"
+                  @input="validateInput($event, 'item_name')" required />
               </div>
 
               <!-- Category Dropdown -->
@@ -77,17 +78,20 @@
 
               <div class="form-group">
                 <label for="editDescription">Description</label>
-                <textarea id="editDescription" v-model="currentPost.description" required></textarea>
+                <textarea id="editDescription" v-model="currentPost.description"
+                  @input="validateInput($event, 'description')" required></textarea>
               </div>
 
               <div class="form-group">
                 <label for="editFacebook">Facebook</label>
-                <input type="text" id="editFacebook" v-model="currentPost.facebook_link" required />
+                <input type="text" id="editFacebook" v-model="currentPost.facebook_link"
+                  @input="validateInput($event, 'facebook_link')" required />
               </div>
 
               <div class="form-group">
                 <label for="editContact">Contact</label>
-                <input type="text" id="editContact" v-model="currentPost.contact_number" required />
+                <input type="text" id="editContact" v-model="currentPost.contact_number"
+                  @input="validateInput($event, 'contact_number')" required />
               </div>
 
               <!-- Image Upload Section -->
@@ -111,9 +115,7 @@
           </div>
         </div>
 
-
-
-        <!-- Upload Form Modal (unchanged) -->
+        <!-- Upload Form Modal -->
         <div v-if="showUploadForm" class="modal-overlay">
           <div class="modal-content">
             <h2 style="font-size: 25px; font-weight: bolder;" class="mb-3">Add Item</h2>
@@ -124,7 +126,8 @@
                 <div class="form-column">
                   <div class="form-group">
                     <label for="itemName">Item Name</label>
-                    <input type="text" id="itemName" v-model="newItem.item_name" required />
+                    <input type="text" id="itemName" v-model="newItem.item_name"
+                      @input="validateInput($event, 'item_name')" required />
                   </div>
                   <div class="form-group">
                     <label for="itemStatus">Status</label>
@@ -160,15 +163,18 @@
                   </div>
                   <div class="form-group">
                     <label for="description">Item Description</label>
-                    <textarea id="description" v-model="newItem.description" rows="3" required></textarea>
+                    <textarea id="description" v-model="newItem.description"
+                      @input="validateInput($event, 'description')" rows="3" required></textarea>
                   </div>
                   <div class="form-group">
                     <label for="facebookLink">Facebook Link</label>
-                    <input type="url" id="facebookLink" v-model="newItem.facebook_link" required />
+                    <input type="url" id="facebookLink" v-model="newItem.facebook_link"
+                      @input="validateInput($event, 'facebook_link')" required />
                   </div>
                   <div class="form-group">
                     <label for="contactNumber">Contact Number</label>
-                    <input type="tel" id="contactNumber" v-model="newItem.contact_number" required />
+                    <input type="tel" id="contactNumber" v-model="newItem.contact_number"
+                      @input="validateInput($event, 'contact_number')" required />
                   </div>
                   <div class="form-group">
                     <label for="itemImage">Upload Image</label>
@@ -283,6 +289,38 @@ export default {
     },
   },
   methods: {
+    validateInput(event, fieldName) {
+      const value = event.target.value;
+
+      const generalRegex = /[^a-zA-Z0-9._/-]/g;  // Allows alphanumeric, ., _, -, and /
+
+
+      const facebookRegex = /[^a-zA-Z0-9._/-?&=#]/g;  // Allows characters used in URLs, including slashes
+
+      const numericRegex = /[^0-9]/g;
+
+      if (fieldName === 'contact_number') {
+      
+        const sanitizedValue = value.replace(numericRegex, '');
+        if (sanitizedValue !== value) {
+          event.target.value = sanitizedValue;
+        }
+        this.currentPost[fieldName] = sanitizedValue; 
+      } else if (fieldName === 'facebook_link') {
+        const cleanedValue = value.replace(facebookRegex, '');
+        if (cleanedValue !== value) {
+          event.target.value = cleanedValue; 
+        }
+        this.currentPost[fieldName] = cleanedValue; 
+      } else {
+        const cleanedValue = value.replace(generalRegex, '');
+        if (cleanedValue !== value) {
+          event.target.value = cleanedValue;
+        }
+        this.currentPost[fieldName] = cleanedValue; 
+      }
+    },
+
     async fetchUserId() {
       try {
         const response = await axios.get(window.userID);
@@ -319,7 +357,13 @@ export default {
       }
     },
     filterPosts() {
+      // Sanitize searchQuery to allow only letters, numbers, spaces, dots, and dashes
+      this.searchQuery = this.searchQuery.replace(/[^a-zA-Z0-9._/-]/g, '');
+
+      // Convert the sanitized query to lowercase for case-insensitive matching
       const query = this.searchQuery.toLowerCase();
+
+      // Filter posts based on the sanitized query
       this.filteredPosts = query
         ? this.posts.filter(
           (post) =>

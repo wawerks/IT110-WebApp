@@ -59,7 +59,7 @@ class CommentController extends Controller
                 ];
 
                 Notification::create([
-                    'user_id' => $item->user_id,
+                    'user_id' =>  auth()->id(),
                     'type' => 'comment',
                     'data' => $notificationData,
                     'read_at' => null

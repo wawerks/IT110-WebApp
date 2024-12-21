@@ -12,23 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            // Add read_at column if it doesn't exist
-            if (!Schema::hasColumn('notifications', 'read_at')) {
-                $table->timestamp('read_at')->nullable();
-            }
+            $table->timestamp('read_at')->nullable()->change();  // Modify the column to be nullable
         });
     }
-
+    
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            // Drop read_at column if it exists
-            if (Schema::hasColumn('notifications', 'read_at')) {
-                $table->dropColumn('read_at');
-            }
+            $table->timestamp('read_at')->nullable(false)->change();  // Revert to non-nullable if needed
         });
     }
 };
