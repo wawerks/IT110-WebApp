@@ -93,13 +93,13 @@ const toggleProfileMenu = (event) => {
     event.stopPropagation();
     showProfileMenu.value = !showProfileMenu.value;
     if (showProfileMenu.value && notificationRef.value) {
-        notificationRef.value.closeDropdown();
+      notificationRef.value.closeDropdown();
     }
 };
 
 const handleNotificationToggle = (isOpen) => {
     if (isOpen) {
-        showProfileMenu.value = false;
+      showProfileMenu.value = false;
     }
 };
 
@@ -109,15 +109,15 @@ const handleSignOut = () => {
 
 const closeDropdown = (e) => {
     if (profileDropdownRef.value && !profileDropdownRef.value.contains(e.target)) {
-        showProfileMenu.value = false;
+      showProfileMenu.value = false;
     }
 };
 
 onMounted(() => {
     document.addEventListener('click', closeDropdown);
-});
-
-onUnmounted(() => {
+  });
+  
+  onUnmounted(() => {
     document.removeEventListener('click', closeDropdown);
 });
 </script>
@@ -137,13 +137,13 @@ nav {
 
 .absolute {
     z-index: 50;
-}
-
-nav .container {
+  }
+  
+  nav .container {
     max-width: 1200px;
-}
-
-nav a {
+  }
+  
+  nav a {
     font-size: 16px;
     font-weight: 600;
 }
@@ -209,7 +209,7 @@ nav a:hover {
 
 @media (max-width: 768px) {
     .hidden-mobile {
-        display: none;
+      display: none;
     }
 
     .mobile-menu {

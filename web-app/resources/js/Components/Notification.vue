@@ -341,6 +341,7 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString(undefined, options);
 };
 
+
 // const markAsRead = async (notificationId) => {
 //   try {
 //     // Sending PUT request to mark the notification as read

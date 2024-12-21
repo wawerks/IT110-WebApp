@@ -2,16 +2,16 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-lg p-8 min-h-screen">
             <!-- Claims Management Header -->
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">Claims Management</h2>
-                <div class="flex space-x-2">
+            <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 sm:mb-0">Claims Management</h2>
+                <div class="flex flex-wrap gap-2">
                     <button
                         v-for="filter in ['All', 'Pending', 'Approved', 'Rejected']"
                         :key="filter"
-                        :class="[
-                            'px-4 py-2 rounded-md transition-colors duration-200',
-                            currentFilter === filter.toLowerCase()
-                                ? 'bg-teal-500 text-white'
+                        :class="[ 
+                            'px-4 py-2 rounded-md transition-colors duration-200', 
+                            currentFilter === filter.toLowerCase() 
+                                ? 'bg-teal-500 text-white' 
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         ]"
                         @click="currentFilter = filter.toLowerCase()"
@@ -29,57 +29,60 @@
             <!-- Combined Found Items and Claims Section -->
             <div v-else-if="filteredClaims.length" class="space-y-6">
                 <!-- Iterate Over Each Item -->
-                <div v-for="claim in filteredClaims" :key="claim.id" class="bg-gray-50 rounded-lg shadow p-6 hover:shadow-md transition-shadow duration-200">
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-start space-x-6">
-                            <!-- Item Image -->
-                            <div class="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                                <img 
-                                    :src="claim.image_url" 
-                                    :alt="claim.item_name" 
-                                    class="w-full h-full object-cover"
-                                    @error="handleImageError"
-                                />
-                            </div>
-
-                            <!-- Item Details -->
-                            <div class="flex-grow">
-                                <h3 class="text-xl font-semibold text-gray-800">{{ claim.item_name }}</h3>
-                                <p class="text-gray-600 text-sm mb-2">{{ claim.description }}</p>
-                                <div class="text-sm text-gray-500 mb-2">
-                                    <p><strong>Category:</strong> {{ claim.category }}</p>
-                                    <p v-if="claim.found_date"><strong>Found Date:</strong> {{ formatDate(claim.found_date) }}</p>
-                                    <p><strong>Claimed By:</strong> {{ claim.user_name }}</p>
-                                    <p><strong>Submission Date:</strong> {{ formatDate(claim.submission_date) }}</p>
-                                    <p v-if="claim.proof_of_ownership">
-                                        <strong>Proof of Ownership:</strong>
-                                        <button @click="viewProof(claim.proof_of_ownership)" class="text-teal-600 hover:underline text-sm ml-2">
-                                            View Proof Image
-                                        </button>
-                                    </p>
-                                </div>
-                                <span :class="getStatusClass(claim.claim_status)">
-                                    {{ formatStatus(claim.claim_status) }}
-                                </span>
-                            </div>
+                <div 
+                    v-for="claim in filteredClaims" 
+                    :key="claim.id" 
+                    class="bg-gray-50 rounded-lg shadow p-6 hover:shadow-md transition-shadow duration-200 flex flex-wrap gap-4"
+                >
+                    <div class="flex-grow sm:flex sm:gap-4">
+                        <!-- Item Image -->
+                        <div class="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img 
+                                :src="claim.image_url" 
+                                :alt="claim.item_name" 
+                                class="w-full h-full object-cover"
+                                @error="handleImageError"
+                            />
                         </div>
 
-                        <!-- Action buttons for pending items - Now on the right -->
-                        <div v-if="claim.claim_status.toLowerCase() === 'pending'" class="flex flex-col space-y-2 ml-4">
-                            <button 
-                                @click="updateClaimStatus(claim.claim_id, 'approved')"
-                                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 flex items-center justify-center min-w-[100px]"
-                            >
-                                Approve
-                            </button>
-                            <button 
-                                @click="updateClaimStatus(claim.claim_id, 'rejected')"
-                                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200 flex items-center justify-center min-w-[100px]"
-                            >
-                                Reject
-                            </button>
+                        <!-- Item Details -->
+                        <div class="flex-grow">
+                            <h3 class="text-xl font-semibold text-gray-800">{{ claim.item_name }}</h3>
+                            <p class="text-gray-600 text-sm mb-2">{{ claim.description }}</p>
+                            <div class="text-sm text-gray-500 mb-2">
+                                <p><strong>Category:</strong> {{ claim.category }}</p>
+                                <p v-if="claim.found_date"><strong>Found Date:</strong> {{ formatDate(claim.found_date) }}</p>
+                                <p><strong>Claimed By:</strong> {{ claim.user_name }}</p>
+                                <p><strong>Submission Date:</strong> {{ formatDate(claim.submission_date) }}</p>
+                                <p v-if="claim.proof_of_ownership">
+                                    <strong>Proof of Ownership:</strong>
+                                    <button @click="viewProof(claim.proof_of_ownership)" class="text-teal-600 hover:underline text-sm ml-2">
+                                        View Proof Image
+                                    </button>
+                                </p>
+                            </div>
+                            <span :class="getStatusClass(claim.claim_status)">
+                                {{ formatStatus(claim.claim_status) }}
+                            </span>
                         </div>
                     </div>
+
+                    <!-- Action buttons for pending items - Now on the right -->
+                    <div v-if="claim.claim_status.toLowerCase() === 'pending'" class="flex flex-col space-y-2 ml-4 sm:ml-0 sm:flex-row sm:space-x-4 sm:space-y-0 sm:justify-end">
+    <button 
+        @click="updateClaimStatus(claim.claim_id, 'approved')"
+        class="px-3 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 min-w-[100px]"
+    >
+        Approve
+    </button>
+    <button 
+        @click="updateClaimStatus(claim.claim_id, 'rejected')"
+        class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200 min-w-[100px]"
+    >
+        Reject
+    </button>
+</div>
+
                 </div>
             </div>
             

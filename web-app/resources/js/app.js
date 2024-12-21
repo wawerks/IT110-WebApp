@@ -21,6 +21,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faPenToSquare, faTrash, faSquare, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { faSquare as faSquareRegular } from '@fortawesome/free-regular-svg-icons';
+import '@mdi/font/css/materialdesignicons.css' // Ensure MDI is imported
 
 library.add(faPenToSquare, faTrash, faSquareRegular, faSquareCheck);
 
@@ -28,6 +29,9 @@ library.add(faPenToSquare, faTrash, faSquareRegular, faSquareCheck);
 const vuetify = createVuetify({
     components,
     directives,
+    icons: {
+        defaultSet: 'mdi'
+    },
 });
 
 // Create the router instance

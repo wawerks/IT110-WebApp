@@ -1,18 +1,34 @@
 <template>
   <v-container class="pa-6">
     <v-card class="mx-auto" max-width="1500">
-      <v-data-table :headers="headers" :items="filteredLogs" :search="search" :loading="loading" :items-per-page="10"
-        class="elevation-1" v-model:page="page">
+      <v-data-table
+        :headers="headers"
+        :items="filteredLogs"
+        :search="search"
+        :loading="loading"
+        :items-per-page="10"
+        class="elevation-1"
+        v-model:page="page"
+        item-value="id"
+      >
+        <!-- Table Header -->
         <template v-slot:top>
           <div class="pa-4">
             <div class="text-h5 text-center mb-4">Users Activity Log</div>
             <div class="d-flex justify-start">
-              <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
-                style="max-width: 300px;"></v-text-field>
+              <v-text-field
+                v-model="search"
+                append-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+                style="max-width: 300px; width: 100%;"
+              />
             </div>
           </div>
         </template>
 
+        <!-- Table Headers -->
         <template v-slot:header="{ props }">
           <tr>
             <th class="text-left">User</th>
@@ -22,34 +38,7 @@
           </tr>
         </template>
 
-        <template v-slot:header.name>
-          <div>
-            <div class="text-subtitle-2 font-weight-bold">User</div>
-            <div class="text-caption text-grey">Name of user</div>
-          </div>
-        </template>
-
-        <template v-slot:header.action>
-          <div>
-            <div class="text-subtitle-2 font-weight-bold">Action</div>
-            <div class="text-caption text-grey">Activity performed</div>
-          </div>
-        </template>
-
-        <template v-slot:header.action_time>
-          <div>
-            <div class="text-subtitle-2 font-weight-bold">Time</div>
-            <div class="text-caption text-grey">When performed</div>
-          </div>
-        </template>
-
-        <template v-slot:header.ip_address>
-          <div>
-            <div class="text-subtitle-2 font-weight-bold">IP Address</div>
-            <div class="text-caption text-grey">IP address of user</div>
-          </div>
-        </template>
-
+        <!-- Table Row -->
         <template v-slot:item="{ item }">
           <tr>
             <td>{{ item.name }}</td>
@@ -59,19 +48,29 @@
           </tr>
         </template>
 
+        <!-- Progress Bar -->
         <template v-slot:progress>
-          <v-progress-linear color="#4fb9af" height="2" indeterminate></v-progress-linear>
+          <v-progress-linear color="#4fb9af" height="2" indeterminate />
         </template>
 
+        <!-- Pagination Controls -->
         <template v-slot:bottom>
           <div class="d-flex align-center justify-center pa-4 gap-4">
-            <v-btn style="background-color: #4fb9af; color: white; text-align: center" variant="flat"
-              :disabled="page === 1" @click="page--">
+            <v-btn
+              style="background-color: #4fb9af; color: white; text-align: center"
+              variant="flat"
+              :disabled="page === 1"
+              @click="page--"
+            >
               Previous
             </v-btn>
             <span>Page {{ page }} of {{ Math.ceil(filteredLogs.length / 10) }}</span>
-            <v-btn style="background-color: #4fb9af; color: white; text-align: center" variant="flat"
-              :disabled="page >= Math.ceil(filteredLogs.length / 10)" @click="page++">
+            <v-btn
+              style="background-color: #4fb9af; color: white; text-align: center"
+              variant="flat"
+              :disabled="page >= Math.ceil(filteredLogs.length / 10)"
+              @click="page++"
+            >
               Next
             </v-btn>
           </div>
@@ -82,46 +81,19 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
-  name: 'UsersLog',
+  name: "UsersLog",
   data() {
     return {
-      search: '',
+      search: "",
       page: 1,
       headers: [
-        {
-          text: 'User',
-          value: 'name',
-          width: '20%',
-          align: 'start',
-          sortable: true,
-          filterable: true,
-        },
-        {
-          text: 'Action',
-          value: 'action',
-          width: '30%',
-          align: 'start',
-          sortable: true,
-          filterable: true,
-        },
-        {
-          text: 'Time',
-          value: 'action_time',
-          width: '20%',
-          align: 'start',
-          sortable: true,
-        },
-        {
-          text: 'IP Address',
-          value: 'ip_address',
-          width: '30%',
-          align: 'start',
-          sortable: true,
-          filterable: true,
-        },
+        { text: "User", value: "name", width: "20%", align: "start", sortable: true, filterable: true },
+        { text: "Action", value: "action", width: "30%", align: "start", sortable: true, filterable: true },
+        { text: "Time", value: "action_time", width: "20%", align: "start", sortable: true },
+        { text: "IP Address", value: "ip_address", width: "30%", align: "start", sortable: true, filterable: true },
       ],
       logs: [],
       loading: true,
@@ -131,13 +103,14 @@ export default {
     filteredLogs() {
       if (!this.search) return this.logs;
       const searchTerm = this.search.toLowerCase();
-      return this.logs.filter(log =>
-        log.name.toLowerCase().includes(searchTerm) ||
-        log.action.toLowerCase().includes(searchTerm) ||
-        this.formatDate(log.action_time).toLowerCase().includes(searchTerm) ||
-        log.ip_address.toLowerCase().includes(searchTerm)
+      return this.logs.filter(
+        (log) =>
+          log.name.toLowerCase().includes(searchTerm) ||
+          log.action.toLowerCase().includes(searchTerm) ||
+          this.formatDate(log.action_time).toLowerCase().includes(searchTerm) ||
+          log.ip_address.toLowerCase().includes(searchTerm)
       );
-    }
+    },
   },
   created() {
     this.fetchLogs();
@@ -145,9 +118,10 @@ export default {
   methods: {
     fetchLogs() {
       this.loading = true;
-      axios.get('/admin/users-log')
-        .then(response => {
-          console.log('Response data:', response.data);
+      axios
+        .get("/admin/users-log")
+        .then((response) => {
+          console.log("Response data:", response.data);
           if (response.data && response.data.logs) {
             this.logs = response.data.logs;
           } else {
@@ -155,23 +129,23 @@ export default {
           }
           this.loading = false;
         })
-        .catch(error => {
-          console.error('Error fetching logs:', error);
+        .catch((error) => {
+          console.error("Error fetching logs:", error);
           this.logs = [];
           this.loading = false;
         });
     },
     formatDate(dateString) {
       const options = {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       };
       const date = new Date(dateString);
-      return date.toLocaleString('en-US', options);
+      return date.toLocaleString("en-US", options);
     },
   },
 };
@@ -207,5 +181,63 @@ export default {
 
 :deep(.v-data-table tbody tr:hover) {
   background-color: #f0f0f0;
+}
+
+/* Ensure table is responsive */
+@media (max-width: 1024px) {
+  .v-container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .v-data-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .v-data-table td, .v-data-table th {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .v-text-field {
+    max-width: 100%;
+    width: auto;
+  }
+
+  .v-btn {
+    font-size: 0.875rem;
+  }
+
+  .pa-4 {
+    padding: 8px !important;
+  }
+
+  .text-h5 {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .v-data-table th, .v-data-table td {
+    font-size: 0.85rem;
+  }
+
+  .v-btn {
+    font-size: 0.75rem;
+  }
+
+  .v-text-field {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .pa-4 {
+    padding: 4px !important;
+  }
+
+  .text-h5 {
+    font-size: 1rem !important;
+  }
 }
 </style>

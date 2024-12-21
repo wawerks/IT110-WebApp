@@ -82,6 +82,7 @@
                   @input="validateInput($event, 'description')" required></textarea>
               </div>
 
+
               <div class="form-group">
                 <label for="editFacebook">Facebook</label>
                 <input type="text" id="editFacebook" v-model="currentPost.facebook_link"

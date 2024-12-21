@@ -99,6 +99,7 @@ class NotificationController extends Controller
     public function markAsRead(Request $request, $id)
     {
         try {
+
             \Log::info('Marking notification as read', ['notification_id' => $id, 'user_id' => Auth::id()]);
     
             // Retrieve the notification by ID and user
@@ -109,6 +110,7 @@ class NotificationController extends Controller
             if (!$notification) {
                 return response()->json(['error' => 'Notification not found'], 404);
             }
+
     
             // If the notification is already marked as read, no further action needed
             if ($notification->read_at) {
@@ -123,6 +125,7 @@ class NotificationController extends Controller
                 'message' => 'Notification marked as read',
                 'notification' => $notification
             ], 200);
+
     
         } catch (\Exception $e) {
             \Log::error('Error marking notification as read:', [
