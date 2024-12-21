@@ -28,8 +28,8 @@
             @click="openNotificationDetails(notification)">
             <div class="flex items-start justify-between">
               <div class="flex-grow">
-                <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
-                <p class="text-sm text-gray-600">{{ notification.message }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ notification.data.title }}</p>
+                <p class="text-sm text-gray-600">{{ notification.data.message }}</p>
                 <p class="text-xs text-gray-500 mt-1">{{ formatDate(notification.created_at) }}</p>
               </div>
               <div v-if="!notification.read_at" class="unread-indicator mt-1 ml-2"></div>
