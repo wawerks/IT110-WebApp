@@ -108,8 +108,18 @@
 
               <!-- Submit and Delete Buttons -->
               <div class="edit-modal__buttons">
-                <button type="submit" class="edit-modal__submit-btn">Save Changes</button>
-                <button type="button" class="edit-modal__delete-btn" @click="deleteCurrentItem">Delete Item</button>
+                <button type="submit" class="edit-modal__submit-btn" :disabled="isSaving">
+                  <span v-if="isSaving" class="inline-block">
+                    <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+                  </span>
+                  <span v-else>Save Changes</span>
+                </button>
+                <button type="button" class="edit-modal__delete-btn" @click="deleteCurrentItem" :disabled="isDeleting">
+                  <span v-if="isDeleting" class="inline-block">
+                    <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+                  </span>
+                  <span v-else>Delete Item</span>
+                </button>
               </div>
             </form>
           </div>
@@ -274,6 +284,8 @@ export default {
       currentPost: {},
       selectedFile: null, // Add this line for handling image upload in edit mode
       imagePreviewUrl: null,
+      isSaving: false,
+      isDeleting: false,
     };
   },
   created() {
@@ -605,6 +617,7 @@ export default {
       }
     },
     async submitEditForm() {
+      this.isSaving = true;
       try {
         const formData = new FormData();
         formData.append('item_name', this.currentPost.item_name);
@@ -642,10 +655,14 @@ export default {
       } catch (error) {
         console.error('Error updating post:', error);
         this.showError(error.response?.data?.message || "An error occurred while updating the post.");
+      } finally {
+        this.isSaving = false;
       }
     },
     async deleteCurrentItem() {
+      this.isDeleting = true;
       if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+        this.isDeleting = false;
         return;
       }
 
@@ -671,6 +688,8 @@ export default {
       } catch (error) {
         console.error('Error deleting item:', error);
         this.showError(error.response?.data?.message || "An error occurred while deleting the item.");
+      } finally {
+        this.isDeleting = false;
       }
     },
     // Display success message (you can customize this)
