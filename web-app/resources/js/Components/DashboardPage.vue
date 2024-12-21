@@ -1055,6 +1055,50 @@ export default {
   margin-bottom: 50px;
 }
 
+@media screen and (max-width: 768px) {
+  .featured-posts {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-items: center;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-bar {
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+  }
+
+  .search-bar input {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .featured-posts {
+    max-width: 300px;
+  }
+
+  .card {
+    max-width: 280px;
+  }
+
+  .search-bar {
+    max-width: 280px;
+  }
+}
 /* === Card Styles === */
 .card {
   background: linear-gradient(135deg, #f8f8f8, #e0e0e0);
